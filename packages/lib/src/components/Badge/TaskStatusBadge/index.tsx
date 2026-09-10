@@ -1,29 +1,8 @@
-import { css } from "@emotion/react";
-import styled from "@emotion/styled";
-import { Badge, Variant } from "@leafygreen-ui/badge";
-import { palette } from "@leafygreen-ui/palette";
+import { Badge, BadgeVariant } from "@via-ds/components/badge";
 import { taskStatusToCopy } from "../../../constants/task";
 import { TaskStatus, TaskStatusUmbrella } from "../../../types/task";
-
-const { purple, red, white } = palette;
-
-interface BadgeColorProps {
-  border?: string;
-  fill?: string;
-  text?: string;
-}
-
-const badgeWidthMaxContent = css`
-  width: max-content;
-`;
-
-// only use for statuses whose color is not supported by leafygreen badge variants, i.e. SystemFailed, TestTimedOut, SetupFailed
-const StyledBadge = styled(Badge)<BadgeColorProps>`
-  ${({ border }) => border && `border-color: ${border} !important;`}
-  ${({ fill }) => fill && `background-color: ${fill} !important;`}
-  ${({ text }) => text && `color: ${text} !important;`}
-  ${badgeWidthMaxContent}
-`;
+import { cx } from "../../../utils/css";
+import styles from "./index.module.css";
 
 interface TaskStatusBadgeProps {
   taskCount?: number;
@@ -42,54 +21,53 @@ const TaskStatusBadge: React.FC<TaskStatusBadgeProps> = ({
   const badgeCopy =
     taskCount === undefined ? statusText : `${taskCount} ${statusText}`;
   return (
-    <StyledBadge
+    <Badge
       key={status}
-      data-cy="task-status-badge"
+      className={cx(styles.badge, customBadgeColorClass(status))}
       data-testid="task-status-badge"
       variant={mapTaskStatusToBadgeVariant[status]}
-      {...customBadgeColors(status)}
     >
       {badgeCopy}
-    </StyledBadge>
+    </Badge>
   );
 };
 
-const mapTaskStatusToBadgeVariant: Record<string, Variant> = {
-  [TaskStatus.Inactive]: Variant.LightGray,
-  [TaskStatus.Unstarted]: Variant.LightGray,
-  [TaskStatus.Undispatched]: Variant.LightGray,
-  [TaskStatus.Blocked]: Variant.LightGray,
-  [TaskStatus.Pending]: Variant.LightGray,
-  [TaskStatus.Unscheduled]: Variant.LightGray,
-  [TaskStatus.Aborted]: Variant.LightGray,
-  [TaskStatus.Started]: Variant.Yellow,
-  [TaskStatus.Dispatched]: Variant.Yellow,
-  [TaskStatus.Failed]: Variant.Red,
-  [TaskStatus.TestTimedOut]: Variant.Red,
-  [TaskStatus.TaskTimedOut]: Variant.Red,
-  [TaskStatus.Succeeded]: Variant.Green,
-  [TaskStatus.WillRun]: Variant.DarkGray,
-  [TaskStatus.SetupFailed]: Variant.Blue,
-};
-const customBadgeColors = (status: string) => {
+const customBadgeColorClass = (status: string) => {
   switch (status) {
     case TaskStatus.SystemFailed:
     case TaskStatus.SystemUnresponsive:
     case TaskStatus.SystemTimedOut:
-      return {
-        border: purple.light2,
-        fill: purple.light3,
-        text: purple.dark2,
-      };
+      return styles.systemFailed;
     case TaskStatus.KnownIssue:
-      return {
-        border: red.light2,
-        fill: white,
-        text: red.dark2,
-      };
+      return styles.knownIssue;
+    case TaskStatus.Undispatched:
+    case TaskStatus.WillRun:
+      return styles.willRun;
     default:
-      return {};
+      return undefined;
   }
+};
+
+const mapTaskStatusToBadgeVariant: Record<string, BadgeVariant> = {
+  [TaskStatus.Inactive]: BadgeVariant.Status,
+  [TaskStatus.Unstarted]: BadgeVariant.Status,
+  [TaskStatus.Undispatched]: BadgeVariant.Status,
+  [TaskStatus.Blocked]: BadgeVariant.Status,
+  [TaskStatus.Pending]: BadgeVariant.Status,
+  [TaskStatus.Unscheduled]: BadgeVariant.Status,
+  [TaskStatus.Aborted]: BadgeVariant.Status,
+  [TaskStatus.Started]: BadgeVariant.Warning,
+  [TaskStatus.Dispatched]: BadgeVariant.Warning,
+  [TaskStatus.Failed]: BadgeVariant.Error,
+  [TaskStatus.TestTimedOut]: BadgeVariant.Error,
+  [TaskStatus.TaskTimedOut]: BadgeVariant.Error,
+  [TaskStatus.SystemFailed]: BadgeVariant.Error,
+  [TaskStatus.SystemUnresponsive]: BadgeVariant.Error,
+  [TaskStatus.SystemTimedOut]: BadgeVariant.Error,
+  [TaskStatus.KnownIssue]: BadgeVariant.Error,
+  [TaskStatus.Succeeded]: BadgeVariant.Success,
+  [TaskStatus.WillRun]: BadgeVariant.Status,
+  [TaskStatus.SetupFailed]: BadgeVariant.Info,
 };
 
 export default TaskStatusBadge;

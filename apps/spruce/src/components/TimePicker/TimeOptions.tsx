@@ -1,15 +1,12 @@
 import { createRef, forwardRef, useLayoutEffect } from "react";
-import styled from "@emotion/styled";
 import { DateType } from "@leafygreen-ui/date-utils";
-import { palette } from "@leafygreen-ui/palette";
-import { size, transitionDuration } from "@evg-ui/lib/constants/tokens";
+import { cx } from "@evg-ui/lib/utils/css";
+import styles from "./TimeOptions.module.css";
 import { RefMap, TimepickerType } from "./types";
-
-const { blue, gray } = palette;
 
 interface TimePickerOptionsProps {
   currentDateTime: Date;
-  "data-cy": string;
+  "data-testid": string;
   onDateChange: (newDate: DateType) => void;
   options: string[];
   type: TimepickerType;
@@ -18,7 +15,7 @@ interface TimePickerOptionsProps {
 
 const TimePickerOptions: React.FC<TimePickerOptionsProps> = ({
   currentDateTime,
-  "data-cy": dataCy,
+  "data-testid": dataTestId,
   onDateChange,
   options,
   type,
@@ -38,7 +35,7 @@ const TimePickerOptions: React.FC<TimePickerOptionsProps> = ({
   }, [optionRefs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <TimeOptions data-cy={dataCy}>
+    <div className={styles.timeOptions} data-testid={dataTestId}>
       {options.map((o) => (
         <TimePickerOption
           key={`${type}-${o}`}
@@ -58,16 +55,9 @@ const TimePickerOptions: React.FC<TimePickerOptionsProps> = ({
           value={o}
         />
       ))}
-    </TimeOptions>
+    </div>
   );
 };
-
-const TimeOptions = styled.div`
-  display: flex;
-  flex-direction: column;
-  overflow: scroll;
-  scrollbar-width: none;
-`;
 
 interface TimePickerOptionProps {
   isSelected: boolean;
@@ -77,34 +67,21 @@ interface TimePickerOptionProps {
 
 const TimePickerOption = forwardRef<HTMLButtonElement, TimePickerOptionProps>(
   ({ isSelected, onSelectOption, value }, ref) => (
-    <Item
+    <button
       ref={ref}
+      className={cx(styles.item, isSelected && styles.itemSelected)}
       id={`time-picker-${value}`}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
         onSelectOption(value);
       }}
-      selected={isSelected}
       type="button"
     >
       {value}
-    </Item>
+    </button>
   ),
 );
 TimePickerOption.displayName = "TimePickerOption";
-
-const Item = styled.button<{ selected: boolean }>`
-  all: unset;
-  font-family: inherit;
-  padding: ${size.xs} 20px;
-  cursor: pointer;
-
-  :hover {
-    ${({ selected }) => !selected && `background-color: ${gray.light2}`};
-  }
-  ${({ selected }) => selected && `background-color: ${blue.light3}`};
-  transition: background-color ${transitionDuration.default}ms ease-in-out;
-`;
 
 export default TimePickerOptions;

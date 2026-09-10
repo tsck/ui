@@ -22,7 +22,7 @@ const SpawnHostCard: React.FC<SpawnHostCardProps> = ({ host }) => {
 
   return (
     <DetailsCard
-      data-cy="spawn-host-card"
+      data-testid="spawn-host-card"
       // @ts-expect-error: FIXME. This comment was added by an automated script.
       fieldMaps={spawnHostCardFieldMaps(sendEvent)}
       type={host}
@@ -96,8 +96,7 @@ const spawnHostCardFieldMaps = (
   IDE: (host: MyHost) =>
     host?.distro?.isVirtualWorkStation &&
     host?.status === HostStatus.Running &&
-    // @ts-expect-error: FIXME. This comment was added by an automated script.
-    workstationSupportedDistros.includes(host?.distro?.id) ? (
+    workstationSupportedDistros.includes(host?.distro?.id ?? "") ? (
       <IDEContainer>
         <StyledLink
           href={getIdeUrl(host.id)}

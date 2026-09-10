@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import styled from "@emotion/styled";
 import { Button } from "@leafygreen-ui/button";
 import {
   SearchInput,
@@ -15,12 +14,11 @@ import {
   TablePlaceholder,
   useLeafyGreenTable,
 } from "@evg-ui/lib/components/Table";
-import { size } from "@evg-ui/lib/constants/tokens";
 import { DisplayModal } from "components/DisplayModal";
+import styles from "./index.module.css";
 
 interface SkippedTestsModalProps<T extends LGRowData> {
   columns: LGColumnDef<T>[];
-  dataCyPrefix: string;
   getSearchText: (row: T) => string;
   loading?: boolean;
   onClickDownload: () => void;
@@ -34,7 +32,6 @@ interface SkippedTestsModalProps<T extends LGRowData> {
 
 export const SkippedTestsModal = <T extends LGRowData>({
   columns,
-  dataCyPrefix,
   getSearchText,
   loading = false,
   onClickDownload,
@@ -63,61 +60,47 @@ export const SkippedTestsModal = <T extends LGRowData>({
 
   return (
     <DisplayModal
-      data-cy={`${dataCyPrefix}-modal`}
+      data-testid="skipped-tests-modal"
       open={open}
       setOpen={setOpen}
       size="large"
       subtitle={subtitle}
       title="Tests skipped by TSS"
     >
-      <HeaderRow>
+      <div className={styles.headerRow}>
         <SearchInput
           aria-label={searchPlaceholder}
-          data-cy={`${dataCyPrefix}-search`}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={searchPlaceholder}
           size={SearchInputSize.Small}
           value={search}
         />
         <Button
-          data-cy={`${dataCyPrefix}-download`}
+          data-testid="skipped-tests-download"
+          disabled={loading}
           leftGlyph={<Icon glyph="Download" />}
           onClick={onClickDownload}
           size="small"
         >
           Download JSON
         </Button>
-      </HeaderRow>
+      </div>
       {!loading && rows.length < totalCount && (
-        <Disclaimer data-cy={`${dataCyPrefix}-truncation-note`}>
+        <Disclaimer data-testid="skipped-tests-truncation-note">
           Showing the first {rows.length} of {totalCount} tests. Download the
           JSON for all available stored tests.
         </Disclaimer>
       )}
-      <OverflowContainer>
+      <div className={styles.overflowContainer}>
         <BaseTable
-          data-cy={`${dataCyPrefix}-table`}
+          data-testid="skipped-tests-table"
           emptyComponent={<TablePlaceholder message="No matching tests." />}
           loading={loading}
           loadingRows={5}
           shouldAlternateRowColor
           table={table}
         />
-      </OverflowContainer>
+      </div>
     </DisplayModal>
   );
 };
-
-const HeaderRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${size.xs};
-  margin-bottom: ${size.xs};
-`;
-
-const OverflowContainer = styled.div`
-  max-height: min(600px, 50vh);
-  overflow-y: auto;
-  margin-top: ${size.xs};
-`;

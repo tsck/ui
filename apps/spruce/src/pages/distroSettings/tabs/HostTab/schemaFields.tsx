@@ -428,13 +428,48 @@ const execUser = {
   },
 };
 
+const containerIsolationEnabled = {
+  schema: {
+    type: "boolean" as const,
+    title: "Enabled",
+  },
+  uiSchema: {
+    "ui:description":
+      "Run task subprocess calls (shell.exec, subprocess.exec) inside an ephemeral Docker container instead of directly on the host. Requires Exec User to be set in the User and SSH Configuration section.",
+    "ui:bold": true,
+  },
+};
+
+const containerIsolationImage = {
+  schema: {
+    type: "string" as const,
+    title: "Container Image",
+  },
+  uiSchema: {
+    "ui:description": "ECR image URI used to create the task container.",
+    "ui:placeholder":
+      "557821124784.dkr.ecr.us-east-1.amazonaws.com/repository:tag",
+  },
+};
+
+const containerIsolationRequireIsolation = {
+  schema: {
+    type: "boolean" as const,
+    title: "Require Isolation",
+  },
+  uiSchema: {
+    "ui:description":
+      "When on, a task fails immediately if its container cannot start. When off (the default), a task falls back to running directly on the host if the container cannot start.",
+  },
+};
+
 const authorizedKeysFile = {
   schema: {
     type: "string" as const,
     title: "Authorized Keys File",
   },
   uiSchema: (hasStaticProvider: boolean) => ({
-    "ui:data-cy": "authorized-keys-input",
+    "ui:data-testid": "authorized-keys-input",
     "ui:description": "Path to file containing authorized SSH keys",
     "ui:placeholder": "~/.ssh/authorized_keys",
     ...(!hasStaticProvider && { "ui:widget": "hidden" }),
@@ -486,7 +521,7 @@ const roundingRule = {
   },
   uiSchema: (hasStaticProvider: boolean) => ({
     "ui:allowDeselect": false,
-    "ui:data-cy": "rounding-rule-select",
+    "ui:data-testid": "rounding-rule-select",
     ...(hasStaticProvider && { "ui:widget": "hidden" }),
   }),
 };
@@ -499,7 +534,7 @@ const feedbackRule = {
   },
   uiSchema: (hasStaticProvider: boolean) => ({
     "ui:allowDeselect": false,
-    "ui:data-cy": "feedback-rule-select",
+    "ui:data-testid": "feedback-rule-select",
     ...(hasStaticProvider && { "ui:widget": "hidden" }),
   }),
 };
@@ -535,7 +570,7 @@ const minimumHosts = {
     minimum: 0,
   },
   uiSchema: (hasEC2Provider: boolean) => ({
-    "ui:data-cy": "minimum-hosts-input",
+    "ui:data-testid": "minimum-hosts-input",
     ...(!hasEC2Provider && { "ui:widget": "hidden" }),
   }),
 };
@@ -547,7 +582,7 @@ const maximumHosts = {
     minimum: 0,
   },
   uiSchema: (hasEC2Provider: boolean) => ({
-    "ui:data-cy": "maximum-hosts-input",
+    "ui:data-testid": "maximum-hosts-input",
     ...(!hasEC2Provider && { "ui:widget": "hidden" }),
   }),
 };
@@ -560,7 +595,7 @@ const acceptableHostIdleTimeSeconds = {
     multipleOf: 1,
   },
   uiSchema: (hasEC2Provider: boolean) => ({
-    "ui:data-cy": "idle-time-input",
+    "ui:data-testid": "idle-time-input",
     "ui:description": "Set 0 to use global default.",
     ...(!hasEC2Provider && { "ui:widget": "hidden" }),
   }),
@@ -574,7 +609,7 @@ const futureHostFraction = {
     maximum: 1,
   },
   uiSchema: (hasEC2Provider: boolean) => ({
-    "ui:data-cy": "future-fraction-input",
+    "ui:data-testid": "future-fraction-input",
     "ui:description": "Set 0 to use global default.",
     ...(!hasEC2Provider && { "ui:widget": "hidden" }),
   }),
@@ -706,5 +741,27 @@ export const sshConfig = {
     execUser: execUser.uiSchema,
     authorizedKeysFile: authorizedKeysFile.uiSchema(hasStaticProvider),
     sshOptions: sshOptions.uiSchema,
+  }),
+};
+
+export const containerIsolation = {
+  schema: {
+    cpus: { type: "integer" as const },
+    enabled: containerIsolationEnabled.schema,
+    image: containerIsolationImage.schema,
+    memoryMb: { type: "integer" as const },
+    requireIsolation: containerIsolationRequireIsolation.schema,
+  },
+  uiSchema: (architecture: Arch) => ({
+    "ui:ObjectFieldTemplate": CardFieldTemplate,
+    // Container isolation is only supported on Linux.
+    ...(!linuxArchitectures.includes(architecture) && {
+      "ui:widget": "hidden",
+    }),
+    enabled: containerIsolationEnabled.uiSchema,
+    image: containerIsolationImage.uiSchema,
+    cpus: { "ui:widget": "hidden" },
+    memoryMb: { "ui:widget": "hidden" },
+    requireIsolation: containerIsolationRequireIsolation.uiSchema,
   }),
 };

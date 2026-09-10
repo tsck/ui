@@ -33,6 +33,7 @@ const AnnotationNote: React.FC<Props> = ({
   const dispatchToast = useToastContext();
   const [newMessage, setMessage] = useState(originalMessage);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMessage(originalMessage);
   }, [originalMessage]);
 
@@ -83,7 +84,7 @@ const AnnotationNote: React.FC<Props> = ({
         trigger={
           <ButtonWrapper>
             <Button
-              data-cy="edit-annotation-button"
+              data-testid="edit-annotation-button"
               disabled={originalMessage === newMessage || !userCanModify}
               onClick={saveAnnotationNote}
               size={Size.XSmall}

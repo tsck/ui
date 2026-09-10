@@ -1,4 +1,3 @@
-import { css } from "@emotion/react";
 import { add } from "date-fns";
 import { GetFormSchema } from "components/SpruceForm/types";
 import { ExpirationRow } from "../ExpirationRow";
@@ -77,10 +76,10 @@ export const getFormSchema = ({
   },
   uiSchema: {
     name: {
-      "ui:data-cy": "volume-name-input",
+      "ui:data-testid": "volume-name-input",
     },
     size: {
-      "ui:data-cy": "volume-size-input",
+      "ui:data-testid": "volume-size-input",
       "ui:description": `The max volume size is ${maxSpawnableLimit} GiB. Volume size can only be updated once every 6 hours, and cannot be decreased.`,
     },
     expirationDetails: {
@@ -99,8 +98,6 @@ export const getFormSchema = ({
   },
 });
 
-const checkboxCSS = css`
-  margin-bottom: 0;
-`;
+const checkboxCSS = { marginBottom: "0px" };
 
 const today = new Date();

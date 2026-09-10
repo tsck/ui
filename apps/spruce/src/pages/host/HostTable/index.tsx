@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
-import styled from "@emotion/styled";
-import { Subtitle } from "@leafygreen-ui/typography";
-import PageSizeSelector from "@evg-ui/lib/components/PageSizeSelector";
-import Pagination from "@evg-ui/lib/components/Pagination";
+import { H4 } from "@via-ds/components";
+import { Pagination } from "@evg-ui/lib/components/Pagination";
 import {
   BaseTable,
   ColumnFiltersState,
@@ -12,9 +10,7 @@ import {
   useLeafyGreenTable,
 } from "@evg-ui/lib/components/Table";
 import { ALL_VALUE } from "@evg-ui/lib/components/TreeSelect";
-import { size } from "@evg-ui/lib/constants/tokens";
 import { useQueryParams } from "@evg-ui/lib/hooks";
-import usePagination from "@evg-ui/lib/src/hooks/usePagination";
 import { Unpacked } from "@evg-ui/lib/types/utils";
 import { useHostsTableAnalytics } from "analytics";
 import { HostEventType, HostEventsQuery } from "gql/generated/types";
@@ -24,6 +20,7 @@ import HostEventString, {
   formatHostFilterOption,
 } from "pages/host/HostEventString";
 import { HostQueryParams } from "../constants";
+import styles from "./index.module.css";
 
 type HostEvent = Unpacked<
   NonNullable<HostEventsQuery["host"]>["events"]["eventLogEntries"]
@@ -50,8 +47,7 @@ const HostTable: React.FC<HostTableProps> = ({
   loading,
   page,
 }) => {
-  const hostsTableAnalytics = useHostsTableAnalytics(true);
-  const { setLimit } = usePagination();
+  const { sendEvent } = useHostsTableAnalytics(true);
   const getDateCopy = useDateFormat();
   const [columnFilters, setColumnFilters] =
     useState<ColumnFiltersState>(initialFilters);
@@ -67,14 +63,6 @@ const HostTable: React.FC<HostTableProps> = ({
       updatedParams[id] = value;
     });
     setQueryParams(updatedParams);
-  };
-
-  const handlePageSizeChange = (pageSize: number): void => {
-    setLimit(pageSize);
-    hostsTableAnalytics.sendEvent({
-      name: "Changed page size",
-      "page.size": pageSize,
-    });
   };
 
   const eventTypeFilterOptions = useMemo(
@@ -120,27 +108,35 @@ const HostTable: React.FC<HostTableProps> = ({
   });
 
   return (
-    <HostCard error={error} loading={loading} metaData={false}>
-      <TableTitle>
-        <Subtitle>Recent Events</Subtitle>
-        <PaginationWrapper>
+    <HostCard error={error} loading={loading}>
+      <div className={styles.tableTitle}>
+        <H4>Recent Events</H4>
+        <div className={styles.paginationWrapper}>
           <Pagination
             currentPage={page}
-            data-cy="host-event-table-pagination"
+            data-testid="host-event-table-pagination"
+            loading={loading}
+            onPageChange={(newPage) =>
+              sendEvent({
+                name: "Changed page",
+                "page.number": newPage,
+              })
+            }
+            onPageSizeChange={(newPageSize) =>
+              sendEvent({
+                name: "Changed page size",
+                "page.size": newPageSize,
+              })
+            }
             pageSize={limit}
             totalResults={eventCount}
           />
-          <PageSizeSelector
-            data-cy="host-event-table-page-size-selector"
-            onChange={handlePageSizeChange}
-            value={limit}
-          />
-        </PaginationWrapper>
-      </TableTitle>
+        </div>
+      </div>
       <BaseTable
-        data-cy-row="host-events-table-row"
-        data-cy-table="host-events-table"
         data-loading={loading}
+        data-testid-row="host-events-table-row"
+        data-testid-table="host-events-table"
         loading={loading}
         loadingRows={limit}
         shouldAlternateRowColor
@@ -175,23 +171,11 @@ const getColumns = (
     enableColumnFilter: true,
     meta: {
       treeSelect: {
-        "data-cy": "event-type-filter",
+        "data-testid": "event-type-filter",
         options: eventTypeFilterOptions,
       },
     },
   },
 ];
-
-const TableTitle = styled.div`
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  margin: ${size.s} 0;
-`;
-
-const PaginationWrapper = styled.div`
-  display: flex;
-  align-items: center;
-`;
 
 export default HostTable;

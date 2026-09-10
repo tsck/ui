@@ -1,4 +1,3 @@
-import styled from "@emotion/styled";
 import { Disclaimer } from "@leafygreen-ui/typography";
 import { StyledLink } from "@evg-ui/lib/components/styles";
 import {
@@ -6,7 +5,6 @@ import {
   LGColumnDef,
   useLeafyGreenTable,
 } from "@evg-ui/lib/components/Table";
-import { size } from "@evg-ui/lib/constants/tokens";
 import { DisplayModal } from "components/DisplayModal";
 import { costDocumentationUrl } from "constants/externalResources";
 import {
@@ -15,6 +13,7 @@ import {
 } from "constants/externalResources/honeycomb";
 import { Cost } from "gql/generated/types";
 import { formatCost } from "utils/numbers";
+import styles from "./index.module.css";
 
 interface CostRow {
   category: string;
@@ -58,21 +57,13 @@ const columns: LGColumnDef<CostRow>[] = [
     cell: ({ getValue }) => {
       const cost = getValue() as number | null | undefined;
       return (
-        <TabularNum>
+        <span className={styles.tabularNum}>
           {cost != null && cost > 0 ? `$${formatCost(cost)}` : "N/A"}
-        </TabularNum>
+        </span>
       );
     },
   },
 ];
-
-const Content = styled.div`
-  padding: ${size.xxs} 0;
-`;
-
-const TabularNum = styled.span`
-  font-variant-numeric: tabular-nums;
-`;
 
 export const CostModal: React.FC<CostModalProps> = ({
   adjustedEBSStorageCost,
@@ -115,19 +106,19 @@ export const CostModal: React.FC<CostModalProps> = ({
 
   return (
     <DisplayModal
-      data-cy="cost-modal"
+      data-testid="cost-modal"
       open={open}
       setOpen={setOpen}
       title={`Cost breakdown for ${name}`}
     >
-      <Content>
+      <div className={styles.content}>
         <StyledLink hideExternalIcon={false} href={costDocumentationUrl}>
           Evergreen cost documentation
         </StyledLink>
-        <BaseTable data-cy="cost-breakdown-table" table={table} />
+        <BaseTable data-testid="cost-breakdown-table" table={table} />
         {taskId && startTs && endTs && (
           <StyledLink
-            data-cy="task-cost-link"
+            data-testid="task-cost-link"
             hideExternalIcon={false}
             href={getHoneycombTaskCostUrl(taskId, startTs, endTs)}
           >
@@ -136,7 +127,7 @@ export const CostModal: React.FC<CostModalProps> = ({
         )}
         {versionId && startTs && endTs && (
           <StyledLink
-            data-cy="version-cost-link"
+            data-testid="version-cost-link"
             hideExternalIcon={false}
             href={getHoneycombVersionCostUrl(versionId, startTs, endTs)}
           >
@@ -147,7 +138,7 @@ export const CostModal: React.FC<CostModalProps> = ({
           * Costs are calculated using a Finance Team formula with applicable
           discounts applied.
         </Disclaimer>
-      </Content>
+      </div>
     </DisplayModal>
   );
 };

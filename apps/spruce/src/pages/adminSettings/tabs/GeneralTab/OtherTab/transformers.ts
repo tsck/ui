@@ -68,6 +68,8 @@ export const gqlToForm = ((data) => {
           targetTimeSecondsOverride:
             releaseMode?.targetTimeSecondsOverride ?? 0,
           idleTimeSecondsOverride: releaseMode?.idleTimeSecondsOverride ?? 0,
+          mergeQueueTargetTimeSecondsOverride:
+            releaseMode?.mergeQueueTargetTimeSecondsOverride ?? 0,
         },
         cost: {
           ebsDiscount: cost?.ebsCost?.ebsDiscount ?? 0,
@@ -106,6 +108,7 @@ export const gqlToForm = ((data) => {
         projectTasksPairs:
           singleTaskDistro?.projectTasksPairs?.map((pair) => ({
             projectId: pair.projectId ?? "",
+            isRegex: pair.isRegex ?? false,
             allowedTasks: pair.allowedTasks ?? [],
             allowedBVs: pair.allowedBVs ?? [],
           })) ?? [],
@@ -307,6 +310,9 @@ export const formToGql = ((form: OtherFormState) => {
         miscSettings.releaseMode.targetTimeSecondsOverride || undefined,
       idleTimeSecondsOverride:
         miscSettings.releaseMode.idleTimeSecondsOverride || undefined,
+      mergeQueueTargetTimeSecondsOverride:
+        miscSettings.releaseMode.mergeQueueTargetTimeSecondsOverride ||
+        undefined,
     },
 
     cost: {
@@ -353,6 +359,7 @@ export const formToGql = ((form: OtherFormState) => {
         .filter((pair) => pair.projectId)
         .map((pair) => ({
           projectID: pair.projectId,
+          isRegex: pair.isRegex ?? false,
           allowedTasks: pair.allowedTasks || [],
           allowedBVs: pair.allowedBVs || [],
         })),

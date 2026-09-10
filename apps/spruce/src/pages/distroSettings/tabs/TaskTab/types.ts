@@ -17,10 +17,11 @@ export interface TaskFormState {
       generateTaskFactor: number;
       groupVersions: boolean;
       mainlineTimeInQueueFactor: number;
+      mergeQueueTargetTimeNanoseconds: number;
       numDependentsFactor: number;
       patchFactor: number;
       patchTimeInQueueFactor: number;
-      targetTime: number;
+      targetTimeNanoseconds: number;
     };
   };
   dispatcherSettings: {

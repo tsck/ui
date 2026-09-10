@@ -448,6 +448,7 @@ export type BootstrapSettings = {
   __typename?: "BootstrapSettings";
   clientDir: Scalars["String"]["output"];
   communication: CommunicationMethod;
+  containerIsolation: ContainerIsolationSettings;
   env: Array<EnvVar>;
   jasperBinaryDir: Scalars["String"]["output"];
   jasperCredentialsPath: Scalars["String"]["output"];
@@ -462,6 +463,7 @@ export type BootstrapSettings = {
 export type BootstrapSettingsInput = {
   clientDir: Scalars["String"]["input"];
   communication: CommunicationMethod;
+  containerIsolation?: InputMaybe<ContainerIsolationSettingsInput>;
   env: Array<EnvVarInput>;
   jasperBinaryDir: Scalars["String"]["input"];
   jasperCredentialsPath: Scalars["String"]["input"];
@@ -504,6 +506,8 @@ export type BucketsConfig = {
   retryFailedLogMoveLookbackDays?: Maybe<Scalars["Int"]["output"]>;
   retryFailedLogMoveLookbackMonths?: Maybe<Scalars["Int"]["output"]>;
   retryFailedLogMoveMaxJobsPerRun?: Maybe<Scalars["Int"]["output"]>;
+  sourceCacheBucket?: Maybe<BucketConfig>;
+  sourceCacheProjects?: Maybe<Array<Scalars["String"]["output"]>>;
   testResultsBucket?: Maybe<BucketConfig>;
 };
 
@@ -517,28 +521,9 @@ export type BucketsConfigInput = {
   retryFailedLogMoveLookbackDays?: InputMaybe<Scalars["Int"]["input"]>;
   retryFailedLogMoveLookbackMonths?: InputMaybe<Scalars["Int"]["input"]>;
   retryFailedLogMoveMaxJobsPerRun?: InputMaybe<Scalars["Int"]["input"]>;
+  sourceCacheBucket?: InputMaybe<BucketConfigInput>;
+  sourceCacheProjects?: InputMaybe<Array<Scalars["String"]["input"]>>;
   testResultsBucket?: InputMaybe<BucketConfigInput>;
-};
-
-export type Build = {
-  __typename?: "Build";
-  actualMakespan: Scalars["Duration"]["output"];
-  buildVariant: Scalars["String"]["output"];
-  id: Scalars["String"]["output"];
-  predictedMakespan: Scalars["Duration"]["output"];
-  status: Scalars["String"]["output"];
-};
-
-/**
- * Build Baron is a service that can be integrated into a project (see Confluence Wiki for more details).
- * This type is returned from the buildBaron query, and contains information about Build Baron configurations and suggested
- * tickets from JIRA for a given task on a given execution.
- */
-export type BuildBaron = {
-  __typename?: "BuildBaron";
-  bbTicketCreationDefined: Scalars["Boolean"]["output"];
-  buildBaronConfigured: Scalars["Boolean"]["output"];
-  searchReturnInfo?: Maybe<SearchReturnInfo>;
 };
 
 export type BuildBaronSettings = {
@@ -636,6 +621,33 @@ export enum CommunicationMethod {
   Rpc = "RPC",
   Ssh = "SSH",
 }
+
+/**
+ * ContainerIsolationSettings controls per-task Docker container isolation for a
+ * distro. When enabled, task subprocess calls (shell.exec, subprocess.exec) run
+ * inside an ephemeral Docker container rather than directly on the host.
+ */
+export type ContainerIsolationSettings = {
+  __typename?: "ContainerIsolationSettings";
+  cpus: Scalars["Int"]["output"];
+  enabled: Scalars["Boolean"]["output"];
+  image: Scalars["String"]["output"];
+  memoryMb: Scalars["Int"]["output"];
+  /**
+   * RequireIsolation opts into fail-closed behavior. When true, container
+   * creation or image-pull failure fails the task immediately rather than
+   * degrading to host-mode. Default (false) is fail-open.
+   */
+  requireIsolation: Scalars["Boolean"]["output"];
+};
+
+export type ContainerIsolationSettingsInput = {
+  cpus: Scalars["Int"]["input"];
+  enabled: Scalars["Boolean"]["input"];
+  image: Scalars["String"]["input"];
+  memoryMb: Scalars["Int"]["input"];
+  requireIsolation: Scalars["Boolean"]["input"];
+};
 
 export type ContainerPool = {
   __typename?: "ContainerPool";
@@ -839,6 +851,7 @@ export type Distro = {
   arch: Arch;
   authorizedKeysFile: Scalars["String"]["output"];
   availableRegions: Array<Scalars["String"]["output"]>;
+  bootstrapMethod: Scalars["String"]["output"];
   bootstrapSettings: BootstrapSettings;
   containerPool: Scalars["String"]["output"];
   costData?: Maybe<CostData>;
@@ -851,9 +864,11 @@ export type Distro = {
   homeVolumeSettings: HomeVolumeSettings;
   hostAllocatorSettings: HostAllocatorSettings;
   iceCreamSettings: IceCreamSettings;
+  id: Scalars["String"]["output"];
   imageId: Scalars["String"]["output"];
   isCluster: Scalars["Boolean"]["output"];
   isVirtualWorkStation: Scalars["Boolean"]["output"];
+  isWindows: Scalars["Boolean"]["output"];
   mountpoints: Array<Scalars["String"]["output"]>;
   name: Scalars["String"]["output"];
   note: Scalars["String"]["output"];
@@ -893,16 +908,6 @@ export type DistroEventsPayload = {
   __typename?: "DistroEventsPayload";
   count: Scalars["Int"]["output"];
   eventLogEntries: Array<DistroEvent>;
-};
-
-export type DistroInfo = {
-  __typename?: "DistroInfo";
-  bootstrapMethod?: Maybe<Scalars["String"]["output"]>;
-  id?: Maybe<Scalars["String"]["output"]>;
-  isVirtualWorkStation?: Maybe<Scalars["Boolean"]["output"]>;
-  isWindows?: Maybe<Scalars["Boolean"]["output"]>;
-  user?: Maybe<Scalars["String"]["output"]>;
-  workDir?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type DistroInput = {
@@ -1024,6 +1029,12 @@ export type EnvVarInput = {
   key: Scalars["String"]["input"];
   value: Scalars["String"]["input"];
 };
+
+export enum ExecutionPlatform {
+  Container = "CONTAINER",
+  Host = "HOST",
+  Virtual = "VIRTUAL",
+}
 
 /**
  * ExecutionTasksFilterOptions is an input for the task.executionTasksFull field.
@@ -1303,7 +1314,8 @@ export type Host = {
   ami?: Maybe<Scalars["String"]["output"]>;
   availabilityZone?: Maybe<Scalars["String"]["output"]>;
   displayName?: Maybe<Scalars["String"]["output"]>;
-  distro?: Maybe<DistroInfo>;
+  distro?: Maybe<Distro>;
+  /** @deprecated Use distro.id instead */
   distroId?: Maybe<Scalars["String"]["output"]>;
   elapsed?: Maybe<Scalars["Time"]["output"]>;
   eventTypes: Array<HostEventType>;
@@ -1508,6 +1520,17 @@ export type HostsResponse = {
   filteredHostsCount?: Maybe<Scalars["Int"]["output"]>;
   hosts: Array<Host>;
   totalHostsCount: Scalars["Int"]["output"];
+};
+
+export type HourlyPatchTaskOverride = {
+  __typename?: "HourlyPatchTaskOverride";
+  maxHourlyPatchTasks?: Maybe<Scalars["Int"]["output"]>;
+  projectOrRepoId?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type HourlyPatchTaskOverrideInput = {
+  maxHourlyPatchTasks: Scalars["Int"]["input"];
+  projectOrRepoId: Scalars["String"]["input"];
 };
 
 export type IceCreamSettings = {
@@ -2496,17 +2519,12 @@ export type Patch = {
   __typename?: "Patch";
   activated: Scalars["Boolean"]["output"];
   alias?: Maybe<Scalars["String"]["output"]>;
-  aliases?: Maybe<Array<Scalars["String"]["output"]>>;
-  author: Scalars["String"]["output"];
-  authorDisplayName: Scalars["String"]["output"];
-  builds: Array<Build>;
-  childPatchAliases?: Maybe<Array<ChildPatchAlias>>;
-  childPatches?: Maybe<Array<Patch>>;
-  /** Aggregated actual cost for the patch's version, when cost data exists. */
-  cost?: Maybe<Cost>;
+  aliases: Array<Scalars["String"]["output"]>;
+  buildVariants: Array<Scalars["String"]["output"]>;
+  childPatchAliases: Array<ChildPatchAlias>;
+  childPatches: Array<Patch>;
   createTime?: Maybe<Scalars["Time"]["output"]>;
   description: Scalars["String"]["output"];
-  duration?: Maybe<PatchDuration>;
   generatedTaskCounts: Array<GeneratedTaskCountResults>;
   githash: Scalars["String"]["output"];
   githubPatchData?: Maybe<GithubPatch>;
@@ -2519,20 +2537,13 @@ export type Patch = {
   parameters: Array<Parameter>;
   patchNumber: Scalars["Int"]["output"];
   patchTriggerAliases: Array<PatchTriggerAlias>;
-  /** Aggregated predicted cost for the patch's version. */
-  predictedCost?: Maybe<Cost>;
   project?: Maybe<PatchProject>;
   projectMetadata?: Maybe<Project>;
   status: Scalars["String"]["output"];
-  taskCount?: Maybe<Scalars["Int"]["output"]>;
-  taskStatuses: Array<Scalars["String"]["output"]>;
   tasks: Array<Scalars["String"]["output"]>;
-  time?: Maybe<PatchTime>;
   user: User;
-  variants: Array<Scalars["String"]["output"]>;
   variantsTasks: Array<VariantTask>;
   version?: Maybe<VersionLite>;
-  versionFull?: Maybe<Version>;
 };
 
 /**
@@ -2544,13 +2555,6 @@ export type PatchConfigure = {
   parameters?: InputMaybe<Array<ParameterInput>>;
   patchTriggerAliases?: InputMaybe<Array<Scalars["String"]["input"]>>;
   variantsTasks: Array<VariantTasks>;
-};
-
-export type PatchDuration = {
-  __typename?: "PatchDuration";
-  makespan?: Maybe<Scalars["String"]["output"]>;
-  time?: Maybe<PatchTime>;
-  timeTaken?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type PatchProject = {
@@ -2673,6 +2677,7 @@ export type PlannerSettings = {
   generateTaskFactor: Scalars["Int"]["output"];
   groupVersions: Scalars["Boolean"]["output"];
   mainlineTimeInQueueFactor: Scalars["Int"]["output"];
+  mergeQueueTargetTime: Scalars["Duration"]["output"];
   numDependentsFactor: Scalars["Float"]["output"];
   patchFactor: Scalars["Int"]["output"];
   patchTimeInQueueFactor: Scalars["Int"]["output"];
@@ -2686,6 +2691,7 @@ export type PlannerSettingsInput = {
   generateTaskFactor: Scalars["Int"]["input"];
   groupVersions: Scalars["Boolean"]["input"];
   mainlineTimeInQueueFactor: Scalars["Int"]["input"];
+  mergeQueueTargetTime?: InputMaybe<Scalars["Int"]["input"]>;
   numDependentsFactor: Scalars["Float"]["input"];
   patchFactor: Scalars["Int"]["input"];
   patchTimeInQueueFactor: Scalars["Int"]["input"];
@@ -2783,9 +2789,11 @@ export type Project = {
   stepbackBisect?: Maybe<Scalars["Boolean"]["output"]>;
   stepbackDisabled?: Maybe<Scalars["Boolean"]["output"]>;
   taskAnnotationSettings: TaskAnnotationSettings;
+  taskOwnership?: Maybe<TaskOwnershipSettings>;
   testSelection?: Maybe<TestSelectionSettings>;
   triggers?: Maybe<Array<TriggerAlias>>;
   versionControlEnabled?: Maybe<Scalars["Boolean"]["output"]>;
+  virtualTasksEnabled?: Maybe<Scalars["Boolean"]["output"]>;
   waterfallDisabled?: Maybe<Scalars["Boolean"]["output"]>;
   workstationConfig: WorkstationConfig;
 };
@@ -2803,6 +2811,7 @@ export type ProjectAlias = {
   id: Scalars["String"]["output"];
   parameters: Array<Parameter>;
   remotePath: Scalars["String"]["output"];
+  requiredLabels: Array<Scalars["String"]["output"]>;
   task: Scalars["String"]["output"];
   taskTags: Array<Scalars["String"]["output"]>;
   variant: Scalars["String"]["output"];
@@ -2816,6 +2825,7 @@ export type ProjectAliasInput = {
   id: Scalars["String"]["input"];
   parameters?: InputMaybe<Array<ParameterInput>>;
   remotePath: Scalars["String"]["input"];
+  requiredLabels?: InputMaybe<Array<Scalars["String"]["input"]>>;
   task: Scalars["String"]["input"];
   taskTags: Array<Scalars["String"]["input"]>;
   variant: Scalars["String"]["input"];
@@ -2934,9 +2944,11 @@ export type ProjectInput = {
   stepbackBisect?: InputMaybe<Scalars["Boolean"]["input"]>;
   stepbackDisabled?: InputMaybe<Scalars["Boolean"]["input"]>;
   taskAnnotationSettings?: InputMaybe<TaskAnnotationSettingsInput>;
+  taskOwnership?: InputMaybe<TaskOwnershipSettingsInput>;
   testSelection?: InputMaybe<TestSelectionSettingsInput>;
   triggers?: InputMaybe<Array<TriggerAliasInput>>;
   versionControlEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  virtualTasksEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
   waterfallDisabled?: InputMaybe<Scalars["Boolean"]["input"]>;
   workstationConfig?: InputMaybe<WorkstationConfigInput>;
 };
@@ -3042,6 +3054,7 @@ export enum ProjectSettingsSection {
   PeriodicBuilds = "PERIODIC_BUILDS",
   Plugins = "PLUGINS",
   PullRequests = "PULL_REQUESTS",
+  TaskOwnershipAndFoliage = "TASK_OWNERSHIP_AND_FOLIAGE",
   TestSelection = "TEST_SELECTION",
   Triggers = "TRIGGERS",
   Variables = "VARIABLES",
@@ -3054,12 +3067,14 @@ export type ProjectTasksPair = {
   allowedBVs: Array<Scalars["String"]["output"]>;
   allowedTasks: Array<Scalars["String"]["output"]>;
   displayName: Scalars["String"]["output"];
+  isRegex?: Maybe<Scalars["Boolean"]["output"]>;
   projectId: Scalars["String"]["output"];
 };
 
 export type ProjectTasksPairInput = {
   allowedBVs: Array<Scalars["String"]["input"]>;
   allowedTasks: Array<Scalars["String"]["input"]>;
+  isRegex?: InputMaybe<Scalars["Boolean"]["input"]>;
   projectID: Scalars["String"]["input"];
 };
 
@@ -3132,8 +3147,6 @@ export type Query = {
   adminSettings?: Maybe<AdminSettings>;
   adminTasksToRestart: AdminTasksToRestartPayload;
   awsRegions?: Maybe<Array<Scalars["String"]["output"]>>;
-  bbGetCreatedTickets: Array<JiraTicket>;
-  buildBaron: BuildBaron;
   buildVariantsForTaskName?: Maybe<Array<BuildVariantTuple>>;
   clientConfig?: Maybe<ClientConfig>;
   distro?: Maybe<Distro>;
@@ -3181,15 +3194,6 @@ export type QueryAdminEventsArgs = {
 
 export type QueryAdminTasksToRestartArgs = {
   opts: RestartAdminTasksOptions;
-};
-
-export type QueryBbGetCreatedTicketsArgs = {
-  taskId: Scalars["String"]["input"];
-};
-
-export type QueryBuildBaronArgs = {
-  execution: Scalars["Int"]["input"];
-  taskId: Scalars["String"]["input"];
 };
 
 export type QueryBuildVariantsForTaskNameArgs = {
@@ -3361,12 +3365,14 @@ export type ReleaseModeConfig = {
   __typename?: "ReleaseModeConfig";
   distroMaxHostsFactor?: Maybe<Scalars["Float"]["output"]>;
   idleTimeSecondsOverride?: Maybe<Scalars["Int"]["output"]>;
+  mergeQueueTargetTimeSecondsOverride?: Maybe<Scalars["Int"]["output"]>;
   targetTimeSecondsOverride?: Maybe<Scalars["Int"]["output"]>;
 };
 
 export type ReleaseModeConfigInput = {
   distroMaxHostsFactor?: InputMaybe<Scalars["Float"]["input"]>;
   idleTimeSecondsOverride?: InputMaybe<Scalars["Int"]["input"]>;
+  mergeQueueTargetTimeSecondsOverride?: InputMaybe<Scalars["Int"]["input"]>;
   targetTimeSecondsOverride?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
@@ -3438,9 +3444,11 @@ export type RepoRef = {
   stepbackBisect?: Maybe<Scalars["Boolean"]["output"]>;
   stepbackDisabled: Scalars["Boolean"]["output"];
   taskAnnotationSettings: TaskAnnotationSettings;
+  taskOwnership?: Maybe<RepoTaskOwnershipSettings>;
   testSelection?: Maybe<RepoTestSelectionSettings>;
   triggers: Array<TriggerAlias>;
   versionControlEnabled: Scalars["Boolean"]["output"];
+  virtualTasksEnabled?: Maybe<Scalars["Boolean"]["output"]>;
   waterfallDisabled: Scalars["Boolean"]["output"];
   workstationConfig: RepoWorkstationConfig;
 };
@@ -3487,9 +3495,11 @@ export type RepoRefInput = {
   stepbackBisect?: InputMaybe<Scalars["Boolean"]["input"]>;
   stepbackDisabled?: InputMaybe<Scalars["Boolean"]["input"]>;
   taskAnnotationSettings?: InputMaybe<TaskAnnotationSettingsInput>;
+  taskOwnership?: InputMaybe<TaskOwnershipSettingsInput>;
   testSelection?: InputMaybe<TestSelectionSettingsInput>;
   triggers?: InputMaybe<Array<TriggerAliasInput>>;
   versionControlEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  virtualTasksEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
   waterfallDisabled?: InputMaybe<Scalars["Boolean"]["input"]>;
   workstationConfig?: InputMaybe<WorkstationConfigInput>;
 };
@@ -3520,10 +3530,17 @@ export type RepoSettingsInput = {
   vars?: InputMaybe<ProjectVarsInput>;
 };
 
+export type RepoTaskOwnershipSettings = {
+  __typename?: "RepoTaskOwnershipSettings";
+  defaultMothraTeam: Scalars["String"]["output"];
+  defaultMothraTeamForBreakingCommit: Scalars["String"]["output"];
+};
+
 export type RepoTestSelectionSettings = {
   __typename?: "RepoTestSelectionSettings";
   allowed: Scalars["Boolean"]["output"];
   defaultEnabled: Scalars["Boolean"]["output"];
+  mainlineDefaultEnabled: Scalars["Boolean"]["output"];
 };
 
 export type RepoWorkstationConfig = {
@@ -3732,6 +3749,7 @@ export type SchedulerConfig = {
   hostAllocatorRoundingRule?: Maybe<RoundingRule>;
   hostsOverallocatedRule?: Maybe<OverallocatedRule>;
   mainlineTimeInQueueFactor?: Maybe<Scalars["Int"]["output"]>;
+  mergeQueueTargetTimeSeconds?: Maybe<Scalars["Int"]["output"]>;
   numDependentsFactor?: Maybe<Scalars["Float"]["output"]>;
   patchFactor?: Maybe<Scalars["Int"]["output"]>;
   patchTimeInQueueFactor?: Maybe<Scalars["Int"]["output"]>;
@@ -3756,6 +3774,7 @@ export type SchedulerConfigInput = {
   hostAllocatorRoundingRule: RoundingRule;
   hostsOverallocatedRule: OverallocatedRule;
   mainlineTimeInQueueFactor: Scalars["Int"]["input"];
+  mergeQueueTargetTimeSeconds?: InputMaybe<Scalars["Int"]["input"]>;
   numDependentsFactor: Scalars["Float"]["input"];
   patchFactor: Scalars["Int"]["input"];
   patchTimeInQueueFactor: Scalars["Int"]["input"];
@@ -4101,6 +4120,7 @@ export type Task = {
   canSchedule: Scalars["Boolean"]["output"];
   canSetPriority: Scalars["Boolean"]["output"];
   canUnschedule: Scalars["Boolean"]["output"];
+  config?: Maybe<TaskConfig>;
   createTime?: Maybe<Scalars["Time"]["output"]>;
   dependsOn?: Maybe<Array<Dependency>>;
   details?: Maybe<TaskEndDetail>;
@@ -4114,6 +4134,12 @@ export type Task = {
   errors?: Maybe<Array<Scalars["String"]["output"]>>;
   estimatedStart?: Maybe<Scalars["Duration"]["output"]>;
   execution: Scalars["Int"]["output"];
+  /**
+   * executionPlatform indicates the environment the task ran in: HOST for a
+   * task that ran directly on the host, or CONTAINER for a task that ran inside
+   * a Docker container on the host.
+   */
+  executionPlatform: ExecutionPlatform;
   executionSteps?: Maybe<Array<TaskExecutionStep>>;
   executionTasks?: Maybe<Array<Scalars["String"]["output"]>>;
   executionTasksFull?: Maybe<Array<Task>>;
@@ -4200,6 +4226,31 @@ export type TaskAnnotationSettings = {
 
 export type TaskAnnotationSettingsInput = {
   fileTicketWebhook?: InputMaybe<WebhookInput>;
+};
+
+export type TaskConfig = {
+  __typename?: "TaskConfig";
+  activate?: Maybe<Scalars["Boolean"]["output"]>;
+  allowForGitTag?: Maybe<Scalars["Boolean"]["output"]>;
+  allowedBranches?: Maybe<Array<Scalars["String"]["output"]>>;
+  allowedRequesters?: Maybe<Array<Scalars["String"]["output"]>>;
+  batchTime?: Maybe<Scalars["Int"]["output"]>;
+  cronBatchTime?: Maybe<Scalars["String"]["output"]>;
+  dependsOn?: Maybe<Array<TaskUnitDependency>>;
+  disable?: Maybe<Scalars["Boolean"]["output"]>;
+  execTimeoutSecs?: Maybe<Scalars["Int"]["output"]>;
+  gitTagOnly?: Maybe<Scalars["Boolean"]["output"]>;
+  groupName?: Maybe<Scalars["String"]["output"]>;
+  ignoredBranches?: Maybe<Array<Scalars["String"]["output"]>>;
+  isGroup?: Maybe<Scalars["Boolean"]["output"]>;
+  isPartOfGroup?: Maybe<Scalars["Boolean"]["output"]>;
+  name: Scalars["String"]["output"];
+  patchOnly?: Maybe<Scalars["Boolean"]["output"]>;
+  patchable?: Maybe<Scalars["Boolean"]["output"]>;
+  priority?: Maybe<Scalars["Int"]["output"]>;
+  ps?: Maybe<Scalars["String"]["output"]>;
+  runOn?: Maybe<Array<Scalars["String"]["output"]>>;
+  stepback?: Maybe<Scalars["Boolean"]["output"]>;
 };
 
 /** TaskCountOptions defines the parameters that are used when counting tasks from a Version. */
@@ -4328,12 +4379,13 @@ export type TaskHostOverridesInput = {
 
 export type TaskInfo = {
   __typename?: "TaskInfo";
-  id?: Maybe<Scalars["ID"]["output"]>;
-  name?: Maybe<Scalars["String"]["output"]>;
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
 };
 
 export type TaskLimitsConfig = {
   __typename?: "TaskLimitsConfig";
+  hourlyPatchTaskOverrides: Array<HourlyPatchTaskOverride>;
   maxConcurrentLargeParserProjectTasks?: Maybe<Scalars["Int"]["output"]>;
   maxDailyAutomaticRestarts?: Maybe<Scalars["Int"]["output"]>;
   maxDegradedModeConcurrentLargeParserProjectTasks?: Maybe<
@@ -4349,9 +4401,11 @@ export type TaskLimitsConfig = {
   maxScheduledTasksPerDistro?: Maybe<Scalars["Int"]["output"]>;
   maxTaskExecution?: Maybe<Scalars["Int"]["output"]>;
   maxTasksPerVersion?: Maybe<Scalars["Int"]["output"]>;
+  taskQueueAutoUnscheduleThreshold?: Maybe<Scalars["Int"]["output"]>;
 };
 
 export type TaskLimitsConfigInput = {
+  hourlyPatchTaskOverrides?: InputMaybe<Array<HourlyPatchTaskOverrideInput>>;
   maxConcurrentLargeParserProjectTasks: Scalars["Int"]["input"];
   maxDailyAutomaticRestarts: Scalars["Int"]["input"];
   maxDegradedModeConcurrentLargeParserProjectTasks: Scalars["Int"]["input"];
@@ -4365,6 +4419,7 @@ export type TaskLimitsConfigInput = {
   maxScheduledTasksPerDistro: Scalars["Int"]["input"];
   maxTaskExecution: Scalars["Int"]["input"];
   maxTasksPerVersion: Scalars["Int"]["input"];
+  taskQueueAutoUnscheduleThreshold?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 export type TaskLogLinks = {
@@ -4400,6 +4455,17 @@ export type TaskOwnerTeam = {
   jiraProject: Scalars["String"]["output"];
   messages: Scalars["String"]["output"];
   teamName: Scalars["String"]["output"];
+};
+
+export type TaskOwnershipSettings = {
+  __typename?: "TaskOwnershipSettings";
+  defaultMothraTeam?: Maybe<Scalars["String"]["output"]>;
+  defaultMothraTeamForBreakingCommit?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type TaskOwnershipSettingsInput = {
+  defaultMothraTeam?: InputMaybe<Scalars["String"]["input"]>;
+  defaultMothraTeamForBreakingCommit?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type TaskPriority = {
@@ -4511,6 +4577,15 @@ export type TaskTestResultSample = {
   totalTestCount: Scalars["Int"]["output"];
 };
 
+export type TaskUnitDependency = {
+  __typename?: "TaskUnitDependency";
+  name: Scalars["String"]["output"];
+  omitGeneratedTasks?: Maybe<Scalars["Boolean"]["output"]>;
+  patchOptional?: Maybe<Scalars["Boolean"]["output"]>;
+  status?: Maybe<Scalars["String"]["output"]>;
+  variant?: Maybe<Scalars["String"]["output"]>;
+};
+
 /**
  * TestFilter is an input value for the taskTestSample query.
  * It's used to filter for tests with testName and status testStatus.
@@ -4586,11 +4661,13 @@ export type TestSelectionSettings = {
   __typename?: "TestSelectionSettings";
   allowed?: Maybe<Scalars["Boolean"]["output"]>;
   defaultEnabled?: Maybe<Scalars["Boolean"]["output"]>;
+  mainlineDefaultEnabled?: Maybe<Scalars["Boolean"]["output"]>;
 };
 
 export type TestSelectionSettingsInput = {
   allowed?: InputMaybe<Scalars["Boolean"]["input"]>;
   defaultEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  mainlineDefaultEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export enum TestSortCategory {
@@ -4915,6 +4992,7 @@ export type Version = {
   predictedCost?: Maybe<Cost>;
   previousVersion?: Maybe<Version>;
   projectMetadata?: Maybe<Project>;
+  quarantinedTestsSkippedCount: Scalars["Int"]["output"];
   repo: Scalars["String"]["output"];
   requester: Scalars["String"]["output"];
   revision: Scalars["String"]["output"];
@@ -5019,11 +5097,11 @@ export type Volume = {
   availabilityZone: Scalars["String"]["output"];
   createdBy: Scalars["String"]["output"];
   creationTime?: Maybe<Scalars["Time"]["output"]>;
-  deviceName?: Maybe<Scalars["String"]["output"]>;
   displayName: Scalars["String"]["output"];
   expiration?: Maybe<Scalars["Time"]["output"]>;
   homeVolume: Scalars["Boolean"]["output"];
   host?: Maybe<Host>;
+  /** @deprecated Use host.id instead */
   hostID: Scalars["String"]["output"];
   id: Scalars["String"]["output"];
   migrating: Scalars["Boolean"]["output"];
@@ -5059,6 +5137,8 @@ export type WaterfallBuild = {
 
 export type WaterfallOptions = {
   date?: InputMaybe<Scalars["Time"]["input"]>;
+  /** Return all builds and tasks for each matching version instead of applying the waterfall filters to them. */
+  includeAllBuildsAndTasks?: InputMaybe<Scalars["Boolean"]["input"]>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   /** Return versions with an order lower than maxOrder. Used for paginating forward. */
   maxOrder?: InputMaybe<Scalars["Int"]["input"]>;
@@ -5164,6 +5244,7 @@ export type BaseTaskFragment = {
   displayName: string;
   displayStatus: string;
   execution: number;
+  executionPlatform: ExecutionPlatform;
   patchNumber?: number | null;
   versionMetadata: {
     __typename?: "VersionLite";
@@ -5192,6 +5273,7 @@ export type TaskQuery = {
     displayName: string;
     displayStatus: string;
     execution: number;
+    executionPlatform: ExecutionPlatform;
     patchNumber?: number | null;
     details?: {
       __typename?: "TaskEndDetail";

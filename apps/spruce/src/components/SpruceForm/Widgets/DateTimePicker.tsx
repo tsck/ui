@@ -1,4 +1,3 @@
-import styled from "@emotion/styled";
 import { DatePicker } from "@leafygreen-ui/date-picker";
 import {
   DateType,
@@ -7,10 +6,10 @@ import {
 } from "@leafygreen-ui/date-utils";
 import { Description, Label } from "@leafygreen-ui/typography";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
-import { size } from "@evg-ui/lib/constants/tokens";
 import LGTimePicker from "components/TimePicker";
 import { useUserTimeZone } from "hooks/useUserTimeZone";
 import ElementWrapper from "../ElementWrapper";
+import styles from "./DateTimePicker.module.css";
 import { SpruceWidgetProps } from "./types";
 
 enum Caller {
@@ -68,10 +67,10 @@ export const DateTimePicker: React.FC<
         </Label>
       )}
       {description && <Description>{description}</Description>}
-      <DateTimeContainer>
+      <div className={styles.dateTimeContainer}>
         <DatePicker
           aria-label="date-picker"
-          data-cy="date-picker"
+          data-testid="date-picker"
           disabled={isDisabled}
           max={disableAfter ? setToUTCMidnight(disableAfter) : undefined}
           min={disableBefore ? setToUTCMidnight(disableBefore) : undefined}
@@ -81,23 +80,15 @@ export const DateTimePicker: React.FC<
         {/* TODO: Replace with official component following completion of LG-3931.
          * Additionally, uninstall @leafygreen-ui/form-field. */}
         <LGTimePicker
-          data-cy="time-picker"
+          data-testid="time-picker"
           disabled={isDisabled}
           onDateChange={handleChange(Caller.Time)}
           value={currentDateTime}
         />
-      </DateTimeContainer>
+      </div>
     </ElementWrapper>
   );
 };
-
-const DateTimeContainer = styled.div`
-  display: flex;
-  align-items: center;
-  > :not(:last-of-type) {
-    margin-right: ${size.xs};
-  }
-`;
 
 export const TimePicker: React.FC<SpruceWidgetProps> = ({
   disabled,
@@ -123,7 +114,7 @@ export const TimePicker: React.FC<SpruceWidgetProps> = ({
       {/* TODO: Replace with official component following completion of LG-3931.
        * Additionally, uninstall @leafygreen-ui/form-field. */}
       <LGTimePicker
-        data-cy="time-picker"
+        data-testid="time-picker"
         disabled={isDisabled}
         label={label}
         onDateChange={handleChange}

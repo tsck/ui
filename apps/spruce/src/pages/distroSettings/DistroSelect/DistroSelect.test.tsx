@@ -20,7 +20,7 @@ describe("distro select", () => {
       wrapper,
     });
     await waitFor(() => {
-      expect(screen.getByDataCy("distro-select")).toBeInTheDocument();
+      expect(screen.getByTestId("distro-select")).toBeInTheDocument();
     });
     await waitFor(() => {
       expect(screen.getByDisplayValue("localhost")).toBeVisible();
@@ -35,7 +35,7 @@ describe("distro select", () => {
       path: "/distro/:distroId/settings/:tab",
     });
     await waitFor(() => {
-      expect(screen.getByDataCy("distro-select")).toBeInTheDocument();
+      expect(screen.getByTestId("distro-select")).toBeInTheDocument();
     });
 
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
@@ -54,7 +54,7 @@ describe("distro select", () => {
       wrapper,
     });
     await waitFor(() => {
-      expect(screen.getByDataCy("distro-select")).toBeInTheDocument();
+      expect(screen.getByTestId("distro-select")).toBeInTheDocument();
     });
 
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
@@ -75,7 +75,7 @@ describe("distro select", () => {
       wrapper,
     });
     await waitFor(() => {
-      expect(screen.getByDataCy("distro-select")).toBeInTheDocument();
+      expect(screen.getByTestId("distro-select")).toBeInTheDocument();
     });
 
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
@@ -103,26 +103,26 @@ const distrosMock: ApolloMock<DistrosQuery, DistrosQueryVariables> = {
     data: {
       distros: [
         {
-          __typename: "Distro",
           adminOnly: false,
           aliases: [],
           availableRegions: [],
+          id: "localhost",
           isVirtualWorkStation: true,
           name: "localhost",
         },
         {
-          __typename: "Distro",
           adminOnly: true,
           aliases: [],
           availableRegions: [],
+          id: "localhost2",
           isVirtualWorkStation: false,
           name: "localhost2",
         },
         {
-          __typename: "Distro",
           aliases: ["alphabetical"],
           adminOnly: true,
           availableRegions: [],
+          id: "abc",
           isVirtualWorkStation: true,
           name: "abc",
         },

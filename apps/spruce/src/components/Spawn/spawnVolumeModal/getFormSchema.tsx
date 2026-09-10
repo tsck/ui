@@ -1,4 +1,3 @@
-import { css } from "@emotion/react";
 import { add } from "date-fns";
 import { DEFAULT_VOLUME_SIZE } from "components/Spawn/spawnHostModal/constants";
 import { GetFormSchema } from "components/SpruceForm/types";
@@ -134,15 +133,15 @@ export const getFormSchema = ({
     requiredVolumeInformation: {
       size: {
         "ui:description": `The max spawnable volume size is ${maxSpawnableLimit} GiB.`,
-        "ui:data-cy": "volume-size-input",
+        "ui:data-testid": "volume-size-input",
       },
       availabilityZone: {
         "ui:allowDeselect": false,
-        "ui:data-cy": "availability-zone-select",
+        "ui:data-testid": "availability-zone-select",
       },
       type: {
         "ui:allowDeselect": false,
-        "ui:data-cy": "type-select",
+        "ui:data-testid": "type-select",
       },
     },
     optionalVolumeInformation: {
@@ -163,14 +162,12 @@ export const getFormSchema = ({
         "ui:allowDeselect": false,
         "ui:disabled": hosts.length === 0,
         "ui:description": hosts.length === 0 ? "No hosts available." : "",
-        "ui:data-cy": "host-select",
+        "ui:data-testid": "host-select",
       },
     },
   },
 });
 
-const checkboxCSS = css`
-  margin-bottom: 0;
-`;
+const checkboxCSS = { marginBottom: "0px" };
 
 const today = new Date();

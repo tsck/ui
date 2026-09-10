@@ -2,7 +2,7 @@ import { css } from "@emotion/react";
 import styled from "@emotion/styled";
 import { palette } from "@leafygreen-ui/palette";
 import { ObjectFieldTemplateProps } from "@rjsf/core";
-import Icon, { Size } from "@evg-ui/lib/components/Icon";
+import Icon from "@evg-ui/lib/components/Icon";
 import { size } from "@evg-ui/lib/constants/tokens";
 import { getFields } from "components/SpruceForm/utils";
 import { VariablesFormState } from "./types";
@@ -33,15 +33,15 @@ export const VariableRow: React.FC<
       <Name showWarning={inRepo || isReserved}>
         {variableName}
         {inRepo && (
-          <span data-cy="override-warning">
-            <OverrideIcon glyph="ImportantWithCircle" size={Size.Small} />
+          <span data-testid="override-warning">
+            <OverrideIcon glyph="ImportantWithCircle" size="small" />
             This will override the variable of the same name defined in the
             repo.
           </span>
         )}
         {isReserved && (
-          <span data-cy="reserved-warning">
-            <OverrideIcon glyph="ImportantWithCircle" size={Size.Small} />
+          <span data-testid="reserved-warning">
+            <OverrideIcon glyph="ImportantWithCircle" size="small" />
             This variable name is reserved for Backstage.
           </span>
         )}

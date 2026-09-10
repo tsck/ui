@@ -2,6 +2,7 @@ import type { Context } from "@sentry/core";
 import {
   type Scope,
   type SeverityLevel,
+  browserSessionIntegration,
   captureException,
   init,
   setTags,
@@ -32,9 +33,6 @@ const initializeSentry = ({
       beforeBreadcrumb: (breadcrumb, hint) => {
         if (breadcrumb?.category?.startsWith("ui")) {
           const { target } = hint?.event ?? {};
-          if (target?.dataset?.cy) {
-            breadcrumb.message = `${target.tagName.toLowerCase()}[data-cy="${target.dataset.cy}"]`;
-          }
           if (target?.dataset?.testid) {
             breadcrumb.message = `${target.tagName.toLowerCase()}[data-testid="${target.dataset.testid}"]`;
           }
@@ -47,6 +45,7 @@ const initializeSentry = ({
       debug: debug,
       dsn: sentryDSN,
       environment: environment || "development",
+      integrations: [browserSessionIntegration({ lifecycle: "page" })],
       maxValueLength: 500,
       normalizeDepth: 5,
     });

@@ -1,10 +1,9 @@
 import { useState } from "react";
-import styled from "@emotion/styled";
 import { Button, Size, Variant } from "@leafygreen-ui/button";
 import { Link } from "@leafygreen-ui/typography";
-import { size } from "@evg-ui/lib/constants/tokens";
 import { DisplayModal } from "components/DisplayModal";
 import FilterChip, { FilterChipType } from "./FilterChip";
+import styles from "./SeeMoreModal.module.css";
 
 interface SeeMoreModalProps {
   chips: FilterChipType[];
@@ -29,13 +28,13 @@ export const SeeMoreModal: React.FC<SeeMoreModalProps> = ({
         see {notVisibleCount} more
       </Link>
       <DisplayModal
-        data-cy="see-more-modal"
+        data-testid="see-more-modal"
         open={open}
         setOpen={setOpen}
         size="large"
         title="Applied Filters"
       >
-        <ChipContainer>
+        <div className={styles.chipContainer}>
           {chips.map((c) => (
             <FilterChip
               key={`filter_chip_${c.key}_${c.value}`}
@@ -45,7 +44,7 @@ export const SeeMoreModal: React.FC<SeeMoreModalProps> = ({
               truncateChipLength={truncateChipLength}
             />
           ))}
-        </ChipContainer>
+        </div>
         <Button
           onClick={onClearAll}
           size={Size.XSmall}
@@ -57,10 +56,3 @@ export const SeeMoreModal: React.FC<SeeMoreModalProps> = ({
     </>
   );
 };
-
-const ChipContainer = styled.div`
-  display: flex;
-  gap: ${size.xs};
-  flex-wrap: wrap;
-  margin: ${size.s} 0;
-`;

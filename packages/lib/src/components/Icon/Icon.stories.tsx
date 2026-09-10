@@ -1,17 +1,17 @@
-import styled from "@emotion/styled";
 import { palette } from "@leafygreen-ui/palette";
-import { size } from "constants/tokens";
+import * as via from "@via-ds/icons";
 import { CustomMeta, CustomStoryObj } from "test_utils/types";
-import Icon, { Size, glyphs } from ".";
+import styles from "./Icon.stories.module.css";
+import Icon, { IconProps, localGlyphs, sizeMap } from ".";
 
 const { green } = palette;
 
-const Sizes = {
-  [Size.Small]: 14,
-  [Size.Default]: 16,
-  [Size.Large]: 20,
-  [Size.XLarge]: 24,
-};
+const glyphNames: IconProps["glyph"][] = [
+  ...Object.entries(via)
+    .filter(([, component]) => (component as via.IconComponent).isGlyph)
+    .map(([name]) => name as IconProps["glyph"]),
+  ...(Object.keys(localGlyphs) as IconProps["glyph"][]),
+].sort();
 
 export default {
   component: Icon,
@@ -24,44 +24,21 @@ export const Default: CustomStoryObj<typeof Icon> = {
     },
     size: {
       control: { type: "select" },
-      options: Object.values(Sizes),
+      options: Object.values(sizeMap),
     },
   },
   args: {
     fill: green.dark3,
-    size: Sizes[Size.Default],
+    size: sizeMap.medium,
   },
   render: (args) => (
-    <Container>
-      {Object.keys(glyphs).map((name) => (
-        <IconContainer key={name}>
+    <div className={styles.container}>
+      {glyphNames.map((name) => (
+        <div key={name} className={styles.iconContainer}>
           <Icon {...args} glyph={name} />
           <span>{name}</span>
-        </IconContainer>
+        </div>
       ))}
-    </Container>
+    </div>
   ),
 };
-
-const Container = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-`;
-
-const IconContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  gap: ${size.xxs};
-
-  width: 150px;
-  height: 70px;
-
-  border: 1px solid #babdbe;
-  border-radius: ${size.xxs};
-  margin: 0.5rem;
-
-  text-align: center;
-`;

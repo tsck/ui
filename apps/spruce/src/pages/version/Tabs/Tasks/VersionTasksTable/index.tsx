@@ -170,8 +170,8 @@ export const VersionTasksTable: React.FC<VersionTasksTableProps> = ({
       controls={
         <TableControl
           filteredCount={filteredCount}
-          label="tasks"
           limit={limit}
+          loading={loading}
           onClear={() => {
             setColumnFilters([]);
             setSorting(defaultSorting);
@@ -188,9 +188,9 @@ export const VersionTasksTable: React.FC<VersionTasksTableProps> = ({
     >
       <BaseTable
         css={taskReviewEnabled && taskReviewStyles}
-        data-cy="tasks-table"
-        data-cy-row="tasks-table-row"
         data-loading={loading}
+        data-testid="tasks-table"
+        data-testid-row="tasks-table-row"
         emptyComponent={<TablePlaceholder message="No tasks found." />}
         loading={loading}
         loadingRows={limit}

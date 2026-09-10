@@ -47,14 +47,14 @@ describe("Error boundary", () => {
         </ErrorBoundary>
       );
       render(<TestErrorBoundary />);
-      expect(screen.getByText("Error")).toBeInTheDocument();
+      expect(screen.getByText("Something went wrong.")).toBeInTheDocument();
       expect(console.error).toHaveBeenCalledWith({
         error: err,
         errorInfo: expect.objectContaining({
           componentStack: expect.any(String),
         }),
       });
-      expect(screen.getByDataTestId("error-fallback")).toBeInTheDocument();
+      expect(screen.getByTestId("error-fallback")).toBeInTheDocument();
     });
   });
   describe("When sentry is initialized", () => {
@@ -95,9 +95,9 @@ describe("Error boundary", () => {
         </ErrorBoundary>
       );
       render(<TestErrorBoundary />);
-      expect(screen.getByText("Error")).toBeInTheDocument();
+      expect(screen.getByText("Something went wrong.")).toBeInTheDocument();
 
-      expect(screen.getByDataTestId("error-fallback")).toBeInTheDocument();
+      expect(screen.getByTestId("error-fallback")).toBeInTheDocument();
     });
     it("should refresh the page when an old bundle error occurs", () => {
       const err = new Error(dynamicallyLoadedModuleErrorMessage);
@@ -113,8 +113,8 @@ describe("Error boundary", () => {
         </ErrorBoundary>
       );
       render(<TestErrorBoundary />);
-      expect(screen.getByText("Error")).toBeInTheDocument();
-      expect(screen.getByDataTestId("error-fallback")).toBeInTheDocument();
+      expect(screen.getByText("Something went wrong.")).toBeInTheDocument();
+      expect(screen.getByTestId("error-fallback")).toBeInTheDocument();
       expect(window.location.reload).toHaveBeenCalled();
     });
   });

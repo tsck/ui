@@ -47,8 +47,8 @@ export const SpawnVolume = () => {
   const maxSpawnableLimit =
     // @ts-expect-error: FIXME. This comment was added by an automated script.
     volumeLimit - totalVolumeSize >= 0 ? volumeLimit - totalVolumeSize : 0;
-  const mountedCount = volumes.filter((v) => v.hostID).length ?? 0;
-  const unmountedCount = volumes.filter((v) => !v.hostID).length ?? 0;
+  const mountedCount = volumes.filter((v) => v.host).length;
+  const unmountedCount = volumes.filter((v) => !v.host).length;
 
   return (
     <>
@@ -56,11 +56,11 @@ export const SpawnVolume = () => {
         <Title>Volumes</Title>
         <BadgeWrapper>
           <Badge
-            data-cy="mounted-badge"
+            data-testid="mounted-badge"
             variant={Variant.Green}
           >{`${mountedCount} Mounted`}</Badge>
           <Badge
-            data-cy="free-badge"
+            data-testid="free-badge"
             variant={Variant.Blue}
           >{`${unmountedCount} Free`}</Badge>
         </BadgeWrapper>
