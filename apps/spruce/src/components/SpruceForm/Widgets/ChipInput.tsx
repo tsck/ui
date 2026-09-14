@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { css } from "@emotion/react";
-import styled from "@emotion/styled";
 import { TextInput } from "@leafygreen-ui/text-input";
 import { CharKey } from "@evg-ui/lib/constants/keys";
-import { size } from "@evg-ui/lib/constants/tokens";
 import { PlusButton, Variant } from "components/Buttons";
 import FilterChips from "../../FilterChips/index";
 import ElementWrapper from "../ElementWrapper";
+import styles from "./ChipInput.module.css";
 import { SpruceWidgetProps } from "./types";
 
 export const ChipInput: React.FC<SpruceWidgetProps> = ({
@@ -18,7 +16,7 @@ export const ChipInput: React.FC<SpruceWidgetProps> = ({
   value = [],
 }) => {
   const [text, setText] = useState("");
-  const { "data-cy": dataCy, description, elementWrapperCSS } = options;
+  const { "data-testid": dataTestId, description, elementWrapperCSS } = options;
   const isDisabled = disabled || readonly;
   const chips = value.map((v: string) => ({
     key: v,
@@ -33,15 +31,11 @@ export const ChipInput: React.FC<SpruceWidgetProps> = ({
     onChange(newItems);
   };
   return (
-    <ElementWrapper
-      css={css`
-        ${chipStyles}
-        ${elementWrapperCSS};
-      `}
-    >
-      <InputWrapper>
-        <ChipInputStyle
-          data-cy={dataCy}
+    <ElementWrapper className={styles.chipLayout} css={elementWrapperCSS}>
+      <div className={styles.inputWrapper}>
+        <TextInput
+          className={styles.textInput}
+          data-testid={dataTestId}
           description={description}
           disabled={isDisabled}
           label={label}
@@ -54,7 +48,7 @@ export const ChipInput: React.FC<SpruceWidgetProps> = ({
           onClick={handleAdd}
           variant={Variant.Primary}
         />
-      </InputWrapper>
+      </div>
       <FilterChips
         chips={chips}
         onClearAll={() => onChange([])}
@@ -65,17 +59,3 @@ export const ChipInput: React.FC<SpruceWidgetProps> = ({
     </ElementWrapper>
   );
 };
-const chipStyles = css`
-  display: flex;
-  flex-direction: column;
-  gap: ${size.xs};
-`;
-const ChipInputStyle = styled(TextInput)`
-  flex-grow: 1;
-`;
-const InputWrapper = styled.div`
-  min-width: 100%;
-  display: flex;
-  align-items: flex-end;
-  gap: ${size.xs};
-`;

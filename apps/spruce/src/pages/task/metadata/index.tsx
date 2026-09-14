@@ -1,3 +1,4 @@
+import { Badge, Variant } from "@leafygreen-ui/badge";
 import { StyledLink, StyledRouterLink } from "@evg-ui/lib/components/styles";
 import { useTaskAnalytics } from "analytics";
 import MetadataCard, {
@@ -10,7 +11,7 @@ import {
   getHostRoute,
   getImageRoute,
 } from "constants/routes";
-import { TaskQuery } from "gql/generated/types";
+import { ExecutionPlatform, TaskQuery } from "gql/generated/types";
 import { isFailedTaskStatus } from "utils/statuses";
 import { BuildVariantCard } from "./BuildVariant";
 import { DebugSpawnHostGuideCue } from "./DebugSpawnHostGuideCue";
@@ -50,6 +51,7 @@ export const Metadata: React.FC<Props> = ({ error, loading, task }) => {
     displayTask,
     distroId,
     execution,
+    executionPlatform,
     executionTasksFull,
     hostId,
     id: taskId,
@@ -96,10 +98,18 @@ export const Metadata: React.FC<Props> = ({ error, loading, task }) => {
 
       {!isDisplayTask && (
         <MetadataCard title="Host Information">
+          {executionPlatform === ExecutionPlatform.Container && (
+            <MetadataItem
+              data-testid="task-metadata-execution-platform"
+              elementType="div"
+            >
+              <Badge variant={Variant.Blue}>Container</Badge>
+            </MetadataItem>
+          )}
           {hostId && (
             <MetadataItem label="ID">
               <StyledLink
-                data-cy="task-host-link"
+                data-testid="task-host-link"
                 href={getHostRoute(hostId)}
                 onClick={() =>
                   taskAnalytics.sendEvent({
@@ -115,7 +125,7 @@ export const Metadata: React.FC<Props> = ({ error, loading, task }) => {
           {distroId && (
             <MetadataItem label="Distro">
               <StyledRouterLink
-                data-cy="task-distro-link"
+                data-testid="task-distro-link"
                 onClick={() =>
                   taskAnalytics.sendEvent({
                     name: "Clicked metadata link",
@@ -131,7 +141,7 @@ export const Metadata: React.FC<Props> = ({ error, loading, task }) => {
           {imageId && (
             <MetadataItem label="Image">
               <StyledRouterLink
-                data-cy="task-image-link"
+                data-testid="task-image-link"
                 onClick={() =>
                   taskAnalytics.sendEvent({
                     name: "Clicked metadata link",
@@ -145,7 +155,7 @@ export const Metadata: React.FC<Props> = ({ error, loading, task }) => {
             </MetadataItem>
           )}
           {ami && (
-            <MetadataItem data-cy="task-metadata-ami" label="AMI">
+            <MetadataItem data-testid="task-metadata-ami" label="AMI">
               {ami}
             </MetadataItem>
           )}

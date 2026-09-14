@@ -27,6 +27,7 @@ import {
   VariantTasks,
 } from "gql/generated/types";
 import { SCHEDULE_PATCH } from "gql/mutations";
+import { useDateFormat } from "hooks/useDateFormat";
 import { sumActivatedTasksInVariantsTasks } from "utils/tasks/estimatedActivatedTasks";
 import { ConfigureBuildVariants } from "./ConfigureBuildVariants";
 import ConfigureTasks from "./ConfigureTasks";
@@ -52,17 +53,18 @@ const ConfigurePatchCore: React.FC<ConfigurePatchCoreProps> = ({
 }) => {
   const navigate = useNavigate();
   const dispatchToast = useToastContext();
+  const getDateCopy = useDateFormat();
 
   const {
     activated,
     childPatchAliases,
     childPatches,
+    createTime,
     githubPatchData,
     id,
     patchTriggerAliases,
     project,
     projectMetadata,
-    time,
     user,
     variantsTasks,
     version,
@@ -161,7 +163,7 @@ const ConfigurePatchCore: React.FC<ConfigurePatchCoreProps> = ({
     return (
       // TODO: Full page error
       <PageLayout>
-        <div data-cy="full-page-error">
+        <div data-testid="full-page-error">
           Something went wrong. This patch&apos;s project either has no variants
           or no tasks associated with it.{" "}
         </div>
@@ -181,7 +183,7 @@ const ConfigurePatchCore: React.FC<ConfigurePatchCoreProps> = ({
     <>
       <FlexRow>
         <StyledInput
-          data-cy="patch-name-input"
+          data-testid="patch-name-input"
           label="Patch Name"
           onChange={(e) => setDescription(e.target.value)}
           value={description}
@@ -189,7 +191,7 @@ const ConfigurePatchCore: React.FC<ConfigurePatchCoreProps> = ({
         <ButtonWrapper>
           {activated && (
             <Button
-              data-cy="cancel-button"
+              data-testid="cancel-button"
               onClick={() =>
                 window.history.state.idx > 0
                   ? navigate(-1)
@@ -200,7 +202,7 @@ const ConfigurePatchCore: React.FC<ConfigurePatchCoreProps> = ({
             </Button>
           )}
           <LoadingButton
-            data-cy="schedule-patch"
+            data-testid="schedule-patch"
             disabled={totalSelectedTaskCount === 0 && aliasCount === 0}
             loading={loadingScheduledPatch || loadingGeneratedTaskCounts}
             onClick={onClickSchedule}
@@ -224,9 +226,11 @@ const ConfigurePatchCore: React.FC<ConfigurePatchCoreProps> = ({
         <PageSider>
           <MetadataCard title="Patch Metadata">
             <MetadataItem label="Submitted by">{user.userId}</MetadataItem>
-            <MetadataItem label="Submitted at">
-              {time?.submittedAt}
-            </MetadataItem>
+            {createTime && (
+              <MetadataItem label="Submitted at">
+                {getDateCopy(createTime, { omitSeconds: true })}
+              </MetadataItem>
+            )}
             <MetadataItem label="Project">
               <StyledRouterLink
                 to={getProjectPatchesRoute(projectIdentifier || projectID)}
@@ -255,7 +259,7 @@ const ConfigurePatchCore: React.FC<ConfigurePatchCoreProps> = ({
             onValueChange={(i: number) => setSelectedTab(indexToTabMap[i])}
             value={tabToIndexMap[selectedTab]}
           >
-            <Tab data-cy="tasks-tab" name="Configure">
+            <Tab data-testid="tasks-tab" name="Configure">
               <ConfigureTasks
                 activated={activated}
                 activatedVariants={variantsTasks}
@@ -270,10 +274,10 @@ const ConfigurePatchCore: React.FC<ConfigurePatchCoreProps> = ({
                 totalSelectedTaskCount={totalSelectedTaskCount}
               />
             </Tab>
-            <Tab data-cy="changes-tab" name="Changes">
+            <Tab data-testid="changes-tab" name="Changes">
               <CodeChanges patchId={id} />
             </Tab>
-            <Tab data-cy="parameters-tab" name="Parameters">
+            <Tab data-testid="parameters-tab" name="Parameters">
               <ParametersContent
                 patchActivated={activated}
                 patchParameters={patchParams}

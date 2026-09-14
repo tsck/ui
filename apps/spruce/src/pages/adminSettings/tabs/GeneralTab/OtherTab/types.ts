@@ -14,6 +14,7 @@ export interface OtherFormState {
         distroMaxHostsFactor: number;
         targetTimeSecondsOverride: number;
         idleTimeSecondsOverride: number;
+        mergeQueueTargetTimeSecondsOverride: number;
       };
       cost: {
         ebsDiscount: number;
@@ -44,6 +45,7 @@ export interface OtherFormState {
     singleTaskDistro: {
       projectTasksPairs: Array<{
         projectId: string;
+        isRegex: boolean;
         allowedTasks: string[];
         allowedBVs: string[];
       }>;

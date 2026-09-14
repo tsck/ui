@@ -1,13 +1,11 @@
-import { css } from "@emotion/react";
-import styled from "@emotion/styled";
 import { Body } from "@leafygreen-ui/typography";
 import { add } from "date-fns";
 import { StyledLink } from "@evg-ui/lib/components/styles";
-import { size } from "@evg-ui/lib/constants/tokens";
 import widgets from "components/SpruceForm/Widgets";
 import { hostUptimeDocumentationUrl } from "constants/externalResources";
 import { abbreviateTimeZone, timeZones } from "constants/time";
 import { MyPublicKeysQuery } from "gql/generated/types";
+import styles from "./getFormSchema.module.css";
 import {
   defaultStartDate,
   defaultStopDate,
@@ -163,14 +161,7 @@ const getHostUptimeSchema = ({
         "ui:widget": widgets.DayPickerWidget,
       },
       timeSelection: {
-        "ui:elementWrapperCSS": css`
-          align-items: center;
-          display: flex;
-          gap: ${size.xs};
-          > * {
-            width: fit-content;
-          }
-        `,
+        "ui:elementWrapperCSS": timeSelectionWrapperCSS,
         startTime: {
           "ui:widget": widgets.TimeWidget,
         },
@@ -182,30 +173,12 @@ const getHostUptimeSchema = ({
           "ui:descriptionNode": <Body>or</Body>,
         },
         runContinuously: {
-          "ui:elementWrapperCSS": css`
-            margin-bottom: 0;
-            white-space: nowrap;
-            width: fit-content;
-          `,
+          "ui:elementWrapperCSS": runContinuouslyWrapperCSS,
         },
       },
     },
     details: {
-      "ui:elementWrapperCSS": css`
-        align-items: flex-end;
-        display: flex;
-        gap: ${size.xs};
-        flex-wrap: wrap;
-
-        > div {
-          width: 40%;
-        }
-
-        > [role="alert"] {
-          margin-top: 0;
-          width: 100%;
-        }
-      `,
+      "ui:elementWrapperCSS": detailsWrapperCSS,
       timeZone: {
         "ui:allowDeselect": false,
         "ui:sizeVariant": "xsmall",
@@ -234,15 +207,10 @@ const getHostUptimeSchema = ({
 const Details: React.FC<{ totalUptimeHours: number }> = ({
   totalUptimeHours,
 }) => (
-  <DetailsDiv data-cy="host-uptime-details">
+  <div className={styles.detailsDiv} data-testid="host-uptime-details">
     • {totalUptimeHours} host uptime hours per week
-  </DetailsDiv>
+  </div>
 );
-
-const DetailsDiv = styled.div`
-  margin-bottom: 21px;
-  white-space: nowrap;
-`;
 
 type ExpirationProps = {
   disableExpirationCheckbox: boolean;
@@ -328,7 +296,7 @@ export const getExpirationDetailsSchema = ({
           : [],
       noExpiration: {
         "ui:enumDisabled": disableExpirationCheckbox ? [true] : null,
-        "ui:data-cy": "expirable-radio-box",
+        "ui:data-testid": "expirable-radio-box",
         "ui:widget": widgets.RadioBoxWidget,
       },
       hostUptime: hostUptime.uiSchema,
@@ -468,8 +436,8 @@ export const getPublicKeySchema = ({
         : "",
     },
     publicKeyNameDropdown: {
-      "ui:elementWrapperCSS": dropdownWrapperClassName,
-      "ui:data-cy": "key-select",
+      "ui:elementWrapperCSS": dropdownWrapperCSS,
+      "ui:data-testid": "key-select",
       "ui:allowDeselect": false,
       "ui:disabled": myPublicKeys?.length === 0,
       "ui:description":
@@ -479,15 +447,37 @@ export const getPublicKeySchema = ({
     },
     newPublicKey: {
       "ui:widget": "textarea",
-      "ui:elementWrapperCSS": textAreaWrapperClassName,
-      "ui:data-cy": "key-value-text-area",
+      "ui:elementWrapperCSS": textAreaWrapperCSS,
+      "ui:data-testid": "key-value-text-area",
     },
   },
 });
 
-const dropdownWrapperClassName = css`
-  max-width: 225px;
-`;
-const textAreaWrapperClassName = css`
-  max-width: 675px;
-`;
+const timeSelectionWrapperCSS = {
+  alignItems: "center",
+  display: "flex",
+  gap: "8px",
+  "> *": {
+    width: "fit-content",
+  },
+};
+const runContinuouslyWrapperCSS = {
+  marginBottom: "0px",
+  whiteSpace: "nowrap",
+  width: "fit-content",
+};
+const detailsWrapperCSS = {
+  alignItems: "flex-end",
+  display: "flex",
+  gap: "8px",
+  flexWrap: "wrap",
+  "> div": {
+    width: "40%",
+  },
+  '> [role="alert"]': {
+    marginTop: "0px",
+    width: "100%",
+  },
+};
+const dropdownWrapperCSS = { maxWidth: "225px" };
+const textAreaWrapperCSS = { maxWidth: "675px" };

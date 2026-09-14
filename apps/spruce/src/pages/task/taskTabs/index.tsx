@@ -22,17 +22,22 @@ import {
   TaskTestCountQueryVariables,
 } from "gql/generated/types";
 import { TASK_PERF_PLUGIN_ENABLED, TASK_TEST_COUNT } from "gql/queries";
+import { useProjectBuildBaronSettings } from "hooks";
 import { useTabShortcut } from "hooks/useTabShortcut";
 import { TaskTab } from "types/task";
-import BuildBaron, { useBuildBaronVariables } from "./buildBaronAndAnnotations";
+import { statuses } from "utils";
+import BuildBaron from "./buildBaronAndAnnotations";
 import ExecutionTasksTable from "./ExecutionTasksTable";
 import ExecutionTasksTiming from "./ExecutionTasksTiming";
 import FileTable from "./FileTable";
 import Logs from "./logs";
+import { TaskConfigTab } from "./TaskConfig";
 import TaskHistory from "./TaskHistory";
 import { walkthroughHistoryTabProps } from "./TaskHistory/constants";
 import TestsTable from "./testsTable/TestsTable";
 import { getDefaultTab } from "./utils/getDefaultTab";
+
+const { isFailedTaskStatus } = statuses;
 
 interface TaskTabProps {
   isDisplayTask: boolean;
@@ -65,17 +70,17 @@ const useTabConfig = (
   } = task;
   const baseTaskId = baseTask?.id || "";
   const { fileCount } = files ?? {};
-  const { id: projectId } = project || {};
-
-  const { showBuildBaron } = useBuildBaronVariables({
-    task: {
-      id,
-      execution,
-      status: displayStatus,
-      canModifyAnnotation,
-      hasAnnotation: !!annotation,
-    },
-  });
+  const { id: projectId, identifier: projectIdentifier } = project || {};
+  const isFailedTask = isFailedTaskStatus(displayStatus);
+  const { bbTicketCreationDefined, buildBaronConfigured } =
+    useProjectBuildBaronSettings({
+      projectId,
+      projectIdentifier,
+      shouldFetch: isFailedTask,
+    });
+  const showBuildBaron =
+    isFailedTask &&
+    (buildBaronConfigured || !!annotation || canModifyAnnotation);
 
   const tabIsActive: Record<TaskTab, boolean> = {
     // Display tasks have no execution logs, but the Logs tab still surfaces
@@ -89,11 +94,12 @@ const useTabConfig = (
     [TaskTab.History]: true,
     [TaskTab.ExecutionTasksTiming]:
       isDisplayTask && !!executionTasksFull && executionTasksFull.length > 0,
+    [TaskTab.Config]: !isDisplayTask,
   };
 
   const tabMap: Record<TaskTab, React.JSX.Element> = {
     [TaskTab.Logs]: (
-      <Tab key="task-logs-tab" data-cy="task-logs-tab" name="Logs">
+      <Tab key="task-logs-tab" data-testid="task-logs-tab" name="Logs">
         <Logs
           execution={execution}
           isDisplayTask={isDisplayTask}
@@ -105,13 +111,13 @@ const useTabConfig = (
     [TaskTab.Tests]: (
       <Tab
         key="task-tests-tab"
-        data-cy="task-tests-tab"
+        data-testid="task-tests-tab"
         name={
           failedTestCount ? (
             <TabLabelWithBadge
               badgeText={failedTestCount}
               badgeVariant={Variant.Red}
-              dataCyBadge="tests-tab-badge"
+              dataTestIdBadge="tests-tab-badge"
               tabLabel="Tests"
             />
           ) : (
@@ -125,7 +131,7 @@ const useTabConfig = (
     [TaskTab.ExecutionTasks]: (
       <Tab
         key="execution-tasks-tab"
-        data-cy="task-execution-tab"
+        data-testid="task-execution-tab"
         name="Execution Tasks"
       >
         <ExecutionTasksTable
@@ -138,13 +144,13 @@ const useTabConfig = (
     [TaskTab.Files]: (
       <Tab
         key="task-files-tab"
-        data-cy="task-files-tab"
+        data-testid="task-files-tab"
         name={
           fileCount !== undefined ? (
             <TabLabelWithBadge
               badgeText={fileCount}
               badgeVariant={Variant.LightGray}
-              dataCyBadge="files-tab-badge"
+              dataTestIdBadge="files-tab-badge"
               tabLabel="Files"
             />
           ) : (
@@ -158,12 +164,14 @@ const useTabConfig = (
     [TaskTab.Annotations]: (
       <Tab
         key="task-build-baron-tab"
-        data-cy="task-build-baron-tab"
+        data-testid="task-build-baron-tab"
         name="Failure Details"
       >
         <BuildBaron
           /* @ts-expect-error: FIXME. This comment was added by an automated script. */
           annotation={annotation}
+          bbTicketCreationDefined={bbTicketCreationDefined}
+          buildBaronConfigured={buildBaronConfigured}
           execution={execution}
           taskId={id}
           userCanModify={canModifyAnnotation}
@@ -173,7 +181,7 @@ const useTabConfig = (
     [TaskTab.TrendCharts]: (
       <Tab
         key="trend-charts-tab"
-        data-cy="trend-charts-tab"
+        data-testid="trend-charts-tab"
         name="Trend Charts"
       >
         <TrendChartsPlugin taskId={id} />
@@ -182,7 +190,7 @@ const useTabConfig = (
     [TaskTab.History]: (
       <Tab
         key="task-history-tab"
-        data-cy="task-history-tab"
+        data-testid="task-history-tab"
         name="History"
         {...walkthroughHistoryTabProps}
       >
@@ -216,13 +224,28 @@ const useTabConfig = (
     [TaskTab.ExecutionTasksTiming]: (
       <Tab
         key="execution-tasks-timing-tab"
-        data-cy="execution-tasks-timing-tab"
+        data-testid="execution-tasks-timing-tab"
         name="Execution Tasks Timing"
       >
         <ExecutionTasksTiming
           executionTasksFull={executionTasksFull}
           taskName={displayName}
         />
+      </Tab>
+    ),
+    [TaskTab.Config]: (
+      <Tab
+        key="task-config-tab"
+        data-testid="task-config-tab"
+        name={
+          <TabLabelWithBadge
+            badgeText="New"
+            badgeVariant={Variant.Blue}
+            tabLabel="Task Config"
+          />
+        }
+      >
+        <TaskConfigTab execution={execution} taskId={id} />
       </Tab>
     ),
   };

@@ -1,12 +1,12 @@
-import { Badge, Variant } from "@leafygreen-ui/badge";
+import { Badge, BadgeVariant } from "@via-ds/components/badge";
 import { TestStatus } from "../../../types/test";
 
 const statusToBadgeColor = {
-  [TestStatus.Pass]: Variant.Green,
-  [TestStatus.Fail]: Variant.Red,
-  [TestStatus.SilentFail]: Variant.Blue,
-  [TestStatus.Skip]: Variant.Yellow,
-  [TestStatus.Timeout]: Variant.Red,
+  [TestStatus.Pass]: BadgeVariant.Success,
+  [TestStatus.Fail]: BadgeVariant.Error,
+  [TestStatus.SilentFail]: BadgeVariant.Info,
+  [TestStatus.Skip]: BadgeVariant.Warning,
+  [TestStatus.Timeout]: BadgeVariant.Error,
 };
 
 const statusToCopy = {
@@ -29,9 +29,8 @@ const TestStatusBadge: React.FC<TestStatusBadgeProps> = ({ status }) => {
   return (
     <Badge
       key={status}
-      data-cy="test-status-badge"
       data-testid="test-status-badge"
-      variant={statusToBadgeColor[testStatus] || Variant.LightGray}
+      variant={statusToBadgeColor[testStatus] || BadgeVariant.Status}
     >
       {statusToCopy[testStatus] || status}
     </Badge>

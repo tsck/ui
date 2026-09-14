@@ -1,9 +1,8 @@
-import styled from "@emotion/styled";
 import { TreeSelect } from "@evg-ui/lib/components/TreeSelect";
-import { size } from "@evg-ui/lib/constants/tokens";
 import Dropdown from "components/Dropdown";
 import { noFilterMessage } from "constants/strings";
 import { useTaskStatuses } from "hooks";
+import styles from "./index.module.css";
 
 interface Props {
   versionId: string;
@@ -23,15 +22,15 @@ export const TaskStatusFilters: React.FC<Props> = ({
   const { baseStatuses, currentStatuses } = useTaskStatuses({ versionId });
 
   return (
-    <Container>
-      <SelectorWrapper>
+    <div className={styles.container}>
+      <div className={styles.selectorWrapper}>
         <Dropdown
           buttonText={`Task Status: ${
             selectedStatuses.length
               ? selectedStatuses.join(", ")
               : noFilterMessage
           }`}
-          data-cy="task-status-filter"
+          data-testid="task-status-filter"
         >
           <TreeSelect
             onChange={onChangeStatusFilter}
@@ -39,15 +38,15 @@ export const TaskStatusFilters: React.FC<Props> = ({
             tData={currentStatuses}
           />
         </Dropdown>
-      </SelectorWrapper>
-      <SelectorWrapper>
+      </div>
+      <div className={styles.selectorWrapper}>
         <Dropdown
           buttonText={`Base Task Status: ${
             selectedBaseStatuses.length
               ? selectedBaseStatuses.join(", ")
               : noFilterMessage
           }`}
-          data-cy="base-task-status-filter"
+          data-testid="base-task-status-filter"
         >
           <TreeSelect
             onChange={onChangeBaseStatusFilter}
@@ -55,17 +54,7 @@ export const TaskStatusFilters: React.FC<Props> = ({
             tData={baseStatuses}
           />
         </Dropdown>
-      </SelectorWrapper>
-    </Container>
+      </div>
+    </div>
   );
 };
-
-const Container = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${size.xxs};
-`;
-
-const SelectorWrapper = styled.div`
-  width: 50%;
-`;

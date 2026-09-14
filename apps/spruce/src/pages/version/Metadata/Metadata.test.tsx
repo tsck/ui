@@ -1,10 +1,10 @@
+import { ToastContext } from "@evg-ui/lib/context/toast";
 import {
   MockedProvider,
   renderWithRouterMatch as render,
   screen,
   stubGetClientRects,
   userEvent,
-  within,
 } from "@evg-ui/lib/test_utils";
 import { VersionQuery } from "gql/generated/types";
 import { getUserMock } from "gql/mocks/getUser";
@@ -13,8 +13,18 @@ import { Metadata } from ".";
 
 type Version = NonNullable<VersionQuery["version"]>;
 
+const toastContextValue = {
+  error: vi.fn(),
+  info: vi.fn(),
+  progress: vi.fn(),
+  success: vi.fn(),
+  warning: vi.fn(),
+};
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <MockedProvider mocks={[getUserMock]}>{children}</MockedProvider>
+  <ToastContext.Provider value={toastContextValue}>
+    <MockedProvider mocks={[getUserMock]}>{children}</MockedProvider>
+  </ToastContext.Provider>
 );
 
 const baseVersion: Version = {
@@ -55,6 +65,7 @@ const baseVersion: Version = {
     owner: "evergreen-ci",
     repo: "evergreen",
   },
+  quarantinedTestsSkippedCount: 0,
   upstreamProject: null,
   user: {
     __typename: "User",
@@ -65,6 +76,30 @@ const baseVersion: Version = {
 };
 
 describe("version metadata sections", () => {
+  it("hides Execution when TSS is enabled but no tests were skipped", () => {
+    render(
+      <Metadata
+        version={{
+          ...baseVersion,
+          projectMetadata: {
+            ...baseVersion.projectMetadata!,
+            testSelection: {
+              __typename: "TestSelectionSettings",
+              allowed: true,
+            },
+          },
+        }}
+      />,
+      {
+        route: "/version/version123",
+        path: "/version/:id",
+        wrapper,
+      },
+    );
+
+    expect(screen.queryByText("Execution")).not.toBeInTheDocument();
+  });
+
   it("ShowsSectionsAndTimeline", () => {
     render(
       <Metadata
@@ -104,18 +139,18 @@ describe("version metadata sections", () => {
     expect(screen.getByText("Execution")).toBeInTheDocument();
     expect(screen.getByText("External Links")).toBeInTheDocument();
     expect(
-      screen.getByDataCy("version-metadata-submitted-at"),
+      screen.getByTestId("version-metadata-submitted-at"),
     ).toHaveTextContent("Submitted");
-    expect(screen.getByDataCy("version-metadata-started")).toHaveTextContent(
+    expect(screen.getByTestId("version-metadata-started")).toHaveTextContent(
       "Started",
     );
-    expect(screen.getByDataCy("version-metadata-finished")).toHaveTextContent(
+    expect(screen.getByTestId("version-metadata-finished")).toHaveTextContent(
       "Finished",
     );
     expect(screen.getByText("Makespan:")).toBeInTheDocument();
     expect(screen.getByText("Time taken:")).toBeInTheDocument();
-    expect(screen.getByDataCy("parameters-link")).toBeInTheDocument();
-    expect(screen.getByDataCy("external-link")).toHaveTextContent(
+    expect(screen.getByTestId("parameters-link")).toBeInTheDocument();
+    expect(screen.getByTestId("external-link")).toHaveTextContent(
       "Evergreen Docs",
     );
   });
@@ -164,29 +199,38 @@ describe("version metadata cost display", () => {
         wrapper,
       },
     );
-    const costWrapper = screen.getByText("Cost:").closest("span")!;
-    await user.hover(within(costWrapper).getByTestId("info-sprinkle-icon"));
+    const infoSprinkle = screen.getByRole("button", { name: "More info" });
+    await user.click(infoSprinkle);
     await screen.findByText("Estimated cost of completed tasks so far.");
   });
 
-  it("shows child patches tooltip when running with children", async () => {
+  it("shows child patches tooltip when child versions exist", async () => {
     const user = userEvent.setup();
     render(
       <Metadata
         version={{
           ...baseVersion,
           isPatch: true,
+          cost: { __typename: "Cost", total: 50 },
+          childVersions: [
+            {
+              __typename: "Version",
+              id: "child1",
+              revision: "abc",
+              status: "started",
+              taskCount: 1,
+              baseVersion: null,
+              parameters: [],
+              projectMetadata: null,
+            },
+          ],
           patch: {
             __typename: "Patch",
-            cost: { __typename: "Cost", total: 50 },
-            childPatches: [
-              { __typename: "Patch", id: "child1" } as unknown as NonNullable<
-                NonNullable<Version["patch"]>["childPatches"]
-              >[number],
-            ],
+            id: "patch",
+            patchNumber: 123,
             githubPatchData: null,
-            includedLocalModules: null,
-          } as unknown as Version["patch"],
+            includedLocalModules: [],
+          },
           finishTime: null,
         }}
       />,
@@ -196,44 +240,10 @@ describe("version metadata cost display", () => {
         wrapper,
       },
     );
-    const costWrapper = screen.getByText("Cost:").closest("span")!;
-    await user.hover(within(costWrapper).getByTestId("info-sprinkle-icon"));
+    const infoSprinkle = screen.getByRole("button", { name: "More info" });
+    await user.click(infoSprinkle);
     await screen.findByText(
       "Estimated cost of completed tasks so far, including child patches.",
-    );
-  });
-
-  it("shows child patches tooltip when complete with children", async () => {
-    const user = userEvent.setup();
-    render(
-      <Metadata
-        version={{
-          ...baseVersion,
-          isPatch: true,
-          patch: {
-            __typename: "Patch",
-            cost: { __typename: "Cost", total: 50 },
-            childPatches: [
-              { __typename: "Patch", id: "child1" } as unknown as NonNullable<
-                NonNullable<Version["patch"]>["childPatches"]
-              >[number],
-            ],
-            githubPatchData: null,
-            includedLocalModules: null,
-          } as unknown as Version["patch"],
-          finishTime: new Date("2024-01-02"),
-        }}
-      />,
-      {
-        route: "/version/version123",
-        path: "/version/:id",
-        wrapper,
-      },
-    );
-    const costWrapper = screen.getByText("Cost:").closest("span")!;
-    await user.hover(within(costWrapper).getByTestId("info-sprinkle-icon"));
-    await screen.findByText(
-      "Total cost of all tasks, including child patches.",
     );
   });
 
@@ -253,8 +263,8 @@ describe("version metadata cost display", () => {
         wrapper,
       },
     );
-    const costWrapper = screen.getByText("Cost:").closest("span")!;
-    await user.hover(within(costWrapper).getByTestId("info-sprinkle-icon"));
+    const infoSprinkle = screen.getByRole("button", { name: "More info" });
+    await user.click(infoSprinkle);
     await screen.findByText("Total cost of all tasks.");
   });
 
@@ -273,7 +283,7 @@ describe("version metadata cost display", () => {
         wrapper,
       },
     );
-    expect(screen.queryByDataCy("cost-details-button")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("cost-details-button")).not.toBeInTheDocument();
   });
 
   it("shows cost detail button when version is complete", () => {
@@ -291,39 +301,7 @@ describe("version metadata cost display", () => {
         wrapper,
       },
     );
-    expect(screen.getByDataCy("cost-details-button")).toBeInTheDocument();
-  });
-
-  it("shows patch cost total in modal for patches", async () => {
-    const user = userEvent.setup();
-    render(
-      <Metadata
-        version={{
-          ...baseVersion,
-          isPatch: true,
-          cost: { __typename: "Cost", total: 1.5 },
-          patch: {
-            __typename: "Patch",
-            cost: { __typename: "Cost", total: 3.75 },
-            childPatches: null,
-            githubPatchData: null,
-            includedLocalModules: [],
-            id: "child-patch",
-            patchNumber: 123,
-          },
-          finishTime: new Date("2024-01-02"),
-        }}
-      />,
-      {
-        route: "/version/version123",
-        path: "/version/:id",
-        wrapper,
-      },
-    );
-    await user.click(screen.getByDataCy("cost-details-button"));
-    // Total row in the modal uses patch.cost.total (3.75), not cost.total (1.5).
-    const modal = screen.getByDataCy("cost-modal");
-    expect(within(modal).getByText("$3.75")).toBeInTheDocument();
+    expect(screen.getByTestId("cost-details-button")).toBeInTheDocument();
   });
 
   it("can reopen cost modal after closing", async () => {
@@ -342,11 +320,11 @@ describe("version metadata cost display", () => {
         wrapper,
       },
     );
-    await user.click(screen.getByDataCy("cost-details-button"));
-    expect(screen.getByDataCy("cost-modal")).toBeInTheDocument();
+    await user.click(screen.getByTestId("cost-details-button"));
+    expect(screen.getByTestId("cost-modal")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Close modal" }));
-    expect(screen.queryByDataCy("cost-modal")).not.toBeInTheDocument();
-    await user.click(screen.getByDataCy("cost-details-button"));
-    expect(screen.getByDataCy("cost-modal")).toBeInTheDocument();
+    expect(screen.queryByTestId("cost-modal")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("cost-details-button"));
+    expect(screen.getByTestId("cost-modal")).toBeInTheDocument();
   });
 });

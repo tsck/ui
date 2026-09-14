@@ -1,13 +1,10 @@
-import styled from "@emotion/styled";
-import { palette } from "@leafygreen-ui/palette";
 import { formatDistanceToNow } from "date-fns";
 import { StyledLink, WordBreak } from "@evg-ui/lib/components/styles";
 import MetadataCard, { MetadataItem } from "components/MetadataCard";
 import { MCI_USER } from "constants/hosts";
 import { getDistroSettingsRoute, getTaskRoute } from "constants/routes";
 import { HostQuery } from "gql/generated/types";
-
-const { gray } = palette;
+import styles from "./Metadata.module.css";
 
 export const Metadata: React.FC<{
   loading: boolean;
@@ -16,7 +13,7 @@ export const Metadata: React.FC<{
 }> = ({ error, host, loading }) => {
   const {
     ami,
-    distroId,
+    distro,
     hostUrl,
     lastCommunicationTime,
     persistentDnsName,
@@ -28,6 +25,7 @@ export const Metadata: React.FC<{
   } = host ?? {};
 
   const { id: runningTaskId, name: runningTaskName } = runningTask ?? {};
+  const distroId = distro?.id;
 
   // @ts-expect-error: FIXME. This comment was added by an automated script.
   const taskLink = getTaskRoute(runningTaskId);
@@ -45,7 +43,7 @@ export const Metadata: React.FC<{
       )}
       {lastCommunicationTime && (
         <MetadataItem
-          data-cy="host-last-communication"
+          data-testid="host-last-communication"
           label="Last communication"
         >
           {formatDistanceToNow(new Date(lastCommunicationTime))} ago
@@ -59,25 +57,21 @@ export const Metadata: React.FC<{
       <MetadataItem label="Cloud provider">{provider}</MetadataItem>
       {ami && <MetadataItem label="AMI">{ami}</MetadataItem>}
       <MetadataItem label="Distro">
-        <StyledLink data-cy="distro-link" href={distroLink}>
+        <StyledLink data-testid="distro-link" href={distroLink}>
           {distroId}
         </StyledLink>
       </MetadataItem>
       {startedBy === MCI_USER && (
-        <MetadataItem data-cy="current-running-task" label="Current task">
+        <MetadataItem data-testid="current-running-task" label="Current task">
           {runningTaskName ? (
-            <StyledLink data-cy="running-task-link" href={taskLink}>
+            <StyledLink data-testid="running-task-link" href={taskLink}>
               <WordBreak all>{runningTaskName}</WordBreak>
             </StyledLink>
           ) : (
-            <Italic>none</Italic>
+            <i className={styles.emptyValue}>none</i>
           )}
         </MetadataItem>
       )}
     </MetadataCard>
   );
 };
-
-const Italic = styled.i`
-  color: ${gray.light1};
-`;

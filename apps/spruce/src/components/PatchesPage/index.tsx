@@ -1,7 +1,5 @@
-import styled from "@emotion/styled";
 import { Checkbox } from "@leafygreen-ui/checkbox";
 import Cookies from "js-cookie";
-import { size } from "@evg-ui/lib/constants/tokens";
 import { useQueryParam } from "@evg-ui/lib/hooks";
 import { usePageTitle } from "@evg-ui/lib/hooks/usePageTitle";
 import { useProjectPatchesAnalytics, useUserPatchesAnalytics } from "analytics";
@@ -11,6 +9,7 @@ import { INCLUDE_HIDDEN_PATCHES } from "constants/cookies";
 import { PatchesPagePatchesFragment } from "gql/generated/types";
 import { PatchPageQueryParams } from "types/patch";
 import { validateRegexp } from "utils/validators";
+import styles from "./index.module.css";
 import ListArea from "./ListArea";
 import { PaginationButtons } from "./PaginationButtons";
 import { StatusSelector } from "./StatusSelector";
@@ -71,11 +70,11 @@ export const PatchesPage: React.FC<Props> = ({
 
   return (
     <PageWrapper>
-      <PageTitle data-cy="patches-page-title">{pageTitle}</PageTitle>
-      <FiltersWrapperSpaceBetween>
+      <PageTitle data-testid="patches-page-title">{pageTitle}</PageTitle>
+      <FiltersWrapper className={styles.filtersWrapperSpaceBetween}>
         <TextInputWithValidation
           aria-label="Search patch descriptions"
-          data-cy="patch-description-input"
+          data-testid="patch-description-input"
           onChange={handleInputChange}
           placeholder="Patch description regex"
           validator={validateRegexp}
@@ -84,19 +83,19 @@ export const PatchesPage: React.FC<Props> = ({
         />
         <StatusSelector />
         {filterComp}
-        <HiddenCheckbox
+        <Checkbox
           checked={includeHiddenCheckboxChecked}
-          data-cy="include-hidden-checkbox"
+          className={styles.hiddenCheckbox}
+          data-testid="include-hidden-checkbox"
           label="Include hidden"
           onChange={includeHiddenCheckboxOnChange}
         />
-      </FiltersWrapperSpaceBetween>
-      {patches?.patches?.length && (
-        <PaginationButtons
-          filteredPatchCount={filteredCount}
-          pageType={pageType}
-        />
-      )}
+      </FiltersWrapper>
+      <PaginationButtons
+        filteredPatchCount={filteredCount}
+        loading={loading}
+        pageType={pageType}
+      />
       <ListArea
         loading={loading}
         pageType={pageType}
@@ -111,13 +110,3 @@ export const PatchesPage: React.FC<Props> = ({
     </PageWrapper>
   );
 };
-
-const FiltersWrapperSpaceBetween = styled(FiltersWrapper)`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr) auto;
-  grid-column-gap: ${size.s};
-`;
-
-const HiddenCheckbox = styled(Checkbox)`
-  justify-content: flex-end;
-`;

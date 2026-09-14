@@ -61,7 +61,7 @@ export const EditSpawnHostModal: React.FC<EditSpawnHostModalProps> = ({
 
   const volumes =
     volumesData?.myVolumes?.filter(
-      (v) => v.availabilityZone === host.availabilityZone && v.hostID === "",
+      (v) => v.availabilityZone === host.availabilityZone && !v.host,
     ) ?? [];
   const userTags =
     host?.instanceTags
@@ -181,7 +181,7 @@ export const EditSpawnHostModal: React.FC<EditSpawnHostModalProps> = ({
         disabled: !hasChanges || hasError || loadingSpawnHost,
         onClick: onSubmit,
       }}
-      data-cy="edit-spawn-host-modal"
+      data-testid="edit-spawn-host-modal"
       open={visible}
       title="Edit Host Details"
     >

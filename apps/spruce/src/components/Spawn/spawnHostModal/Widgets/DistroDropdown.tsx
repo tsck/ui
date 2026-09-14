@@ -1,14 +1,9 @@
 import { Fragment } from "react";
-import styled from "@emotion/styled";
 import { Overline } from "@leafygreen-ui/typography";
-import { size } from "@evg-ui/lib/constants/tokens";
 import SearchableDropdown from "components/SearchableDropdown";
 import ElementWrapper from "components/SpruceForm/ElementWrapper";
 import { EnumSpruceWidgetProps } from "components/SpruceForm/Widgets/types";
-import {
-  hoverStyles,
-  overlineStyles,
-} from "components/styles/SearchableDropdown";
+import styles from "./DistroDropdown.module.css";
 
 interface DistroValue {
   adminOnly: boolean;
@@ -30,16 +25,16 @@ export const DistroDropdown: React.FC<DistroEnum & EnumSpruceWidgetProps> = ({
 }) => {
   const {
     ariaLabelledBy,
-    "data-cy": dataCy,
+    "data-testid": dataTestId,
     distros: distroList,
     elementWrapperCSS,
   } = options;
 
   const searchableOptions = categorizeDistros(distroList);
   return (
-    <StyledElementWrapper css={elementWrapperCSS}>
+    <ElementWrapper className={styles.elementWrapper} css={elementWrapperCSS}>
       <SearchableDropdown
-        data-cy={dataCy}
+        data-testid={dataTestId}
         label={ariaLabelledBy ? undefined : label}
         onChange={onChange}
         optionRenderer={({ distros, title }, onClick) => (
@@ -62,7 +57,7 @@ export const DistroDropdown: React.FC<DistroEnum & EnumSpruceWidgetProps> = ({
         value={value}
         valuePlaceholder={value || "Select a distro"}
       />
-    </StyledElementWrapper>
+    </ElementWrapper>
   );
 };
 
@@ -102,34 +97,19 @@ const DropdownOption: React.FC<{
 }> = ({ distros, onClick, title }) =>
   distros.length > 0 ? (
     <Fragment key={title}>
-      <Overline css={overlineStyles}>{title}</Overline>
-      <ListContainer>
+      <Overline className={styles.overline}>{title}</Overline>
+      <div className={styles.listContainer}>
         {distros.map((d) => (
-          <Option
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing violation, surfaced by the Emotion conversion
+          <div
             key={d}
-            data-cy={`distro-option-${d}`}
+            className={styles.option}
+            data-testid={`distro-option-${d}`}
             onClick={() => onClick(d)}
           >
             {d}
-          </Option>
+          </div>
         ))}
-      </ListContainer>
+      </div>
     </Fragment>
   ) : null;
-
-const ListContainer = styled.div`
-  margin: 0;
-  padding: 0;
-`;
-
-const Option = styled.div`
-  word-break: normal;
-  overflow-wrap: anywhere;
-  padding: ${size.xs} ${size.s};
-  ${hoverStyles};
-`;
-
-const StyledElementWrapper = styled(ElementWrapper)`
-  display: flex;
-  flex-direction: column;
-`;

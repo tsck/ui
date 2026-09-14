@@ -1,9 +1,8 @@
 import { useQuery } from "@apollo/client/react";
-import styled from "@emotion/styled";
 import { Button } from "@leafygreen-ui/button";
 import { Skeleton, TableSkeleton } from "@leafygreen-ui/skeleton-loader";
 import { Body } from "@leafygreen-ui/typography";
-import { size } from "@evg-ui/lib/constants/tokens";
+import { Callout, CalloutVariant } from "@via-ds/components";
 import { useVersionAnalytics } from "analytics";
 import { getVersionDiffRoute } from "constants/routes";
 import {
@@ -12,14 +11,15 @@ import {
 } from "gql/generated/types";
 import { CODE_CHANGES } from "gql/queries";
 import { Badge } from "./Badge";
+import styles from "./index.module.css";
 import { Table } from "./Table";
 
 interface CodeChangesProps {
-  disableDiffLinks?: boolean;
+  isMergeQueuePatch?: boolean;
   patchId: string;
 }
 export const CodeChanges: React.FC<CodeChangesProps> = ({
-  disableDiffLinks = false,
+  isMergeQueuePatch = false,
   patchId,
 }) => {
   const { sendEvent } = useVersionAnalytics(patchId);
@@ -34,7 +34,7 @@ export const CodeChanges: React.FC<CodeChangesProps> = ({
   if (loading) {
     return (
       <>
-        <StyledSkeleton />
+        <Skeleton className={styles.skeleton} />
         <TableSkeleton numCols={3} />
       </>
     );
@@ -45,16 +45,20 @@ export const CodeChanges: React.FC<CodeChangesProps> = ({
 
   if (!moduleCodeChanges?.length) {
     return (
-      <Body className="cy-no-code-changes">
+      <Body data-testid="no-code-changes">
         No code changes were applied, or the code changes are too large to
         display.
       </Body>
     );
   }
+
   return (
-    <div data-cy="code-changes">
+    <div data-testid="code-changes">
       {moduleCodeChanges?.map((modCodeChange, index) => {
         const { branchName, fileDiffs, rawLink } = modCodeChange;
+
+        const exceedsFileLimit = fileDiffs.length > 300;
+        const disableDiffLinks = isMergeQueuePatch || exceedsFileLimit;
 
         const additions = fileDiffs.reduce(
           (total, diff) => total + diff.additions,
@@ -76,12 +80,21 @@ export const CodeChanges: React.FC<CodeChangesProps> = ({
 
         return (
           <div key={branchName}>
-            <TitleContainer>
+            {disableDiffLinks && (
+              <Callout variant={CalloutVariant.Important}>
+                Diff links are disabled since diffs cannot be displayed{" "}
+                {isMergeQueuePatch
+                  ? "for merge queue patches"
+                  : "if more than 300 files were modified"}
+                .
+              </Callout>
+            )}
+            <div className={styles.titleContainer}>
               <Body weight="medium">Changes on {branchName}:</Body>
               {!disableDiffLinks && (
                 <>
                   <Button
-                    data-cy="html-diff-btn"
+                    data-testid="html-diff-btn"
                     href={getVersionDiffRoute(patchId, index)}
                     onClick={() =>
                       sendEvent({
@@ -96,7 +109,7 @@ export const CodeChanges: React.FC<CodeChangesProps> = ({
                     HTML
                   </Button>
                   <Button
-                    data-cy="raw-diff-btn"
+                    data-testid="raw-diff-btn"
                     href={rawLink}
                     onClick={() =>
                       sendEvent({
@@ -113,7 +126,7 @@ export const CodeChanges: React.FC<CodeChangesProps> = ({
                 </>
               )}
               <Badge additions={additions} deletions={deletions} />
-            </TitleContainer>
+            </div>
             {codeChanges}
           </div>
         );
@@ -121,14 +134,3 @@ export const CodeChanges: React.FC<CodeChangesProps> = ({
     </div>
   );
 };
-
-const StyledSkeleton = styled(Skeleton)`
-  width: 400px;
-`;
-
-const TitleContainer = styled.div`
-  align-items: baseline;
-  display: flex;
-  gap: ${size.xs};
-  margin: ${size.m} 0 ${size.xs} 0;
-`;

@@ -1,17 +1,13 @@
-import styled from "@emotion/styled";
-import { size } from "constants/tokens";
 import { CustomMeta, CustomStoryObj } from "test_utils/types";
-import { TaskStatus, TaskStatusUmbrella } from "types/task";
+import { TaskStatus } from "types/task";
+import styles from "./TaskStatusBadge.stories.module.css";
 import TaskStatusBadge from ".";
 
 export default {
   component: TaskStatusBadge,
 } satisfies CustomMeta<typeof TaskStatusBadge>;
 
-const statuses = [
-  ...Object.values(TaskStatus),
-  ...Object.values(TaskStatusUmbrella),
-];
+const statuses = Object.values(TaskStatus);
 
 export const Default: CustomStoryObj<typeof TaskStatusBadge> = {
   argTypes: {
@@ -28,26 +24,20 @@ export const Default: CustomStoryObj<typeof TaskStatusBadge> = {
 
 export const AllBadges: CustomStoryObj<typeof TaskStatusBadge> = {
   render: () => (
-    <Container>
+    <div className={styles.container}>
       {statuses.map((status) => (
         <TaskStatusBadge key={status} status={status} />
       ))}
-    </Container>
+    </div>
   ),
 };
 
 export const WithTaskCount: CustomStoryObj<typeof TaskStatusBadge> = {
   render: () => (
-    <Container>
+    <div className={styles.container}>
       {Object.values(TaskStatus).map((status) => (
         <TaskStatusBadge key={status} status={status} taskCount={2} />
       ))}
-    </Container>
+    </div>
   ),
 };
-
-const Container = styled.div`
-  display: flex;
-  gap: ${size.xs};
-  flex-wrap: wrap;
-`;

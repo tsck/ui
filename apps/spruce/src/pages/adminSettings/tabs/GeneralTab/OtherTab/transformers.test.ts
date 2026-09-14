@@ -95,6 +95,7 @@ const mockAdminSettings: AdminSettingsData = {
     distroMaxHostsFactor: 2,
     targetTimeSecondsOverride: 300,
     idleTimeSecondsOverride: 600,
+    mergeQueueTargetTimeSecondsOverride: 120,
   },
   cost: {
     ebsCost: {
@@ -108,6 +109,7 @@ const mockAdminSettings: AdminSettingsData = {
     projectTasksPairs: [
       {
         projectId: "test-project",
+        isRegex: true,
         allowedTasks: ["compile", "test"],
         allowedBVs: ["ubuntu", "windows"],
       },
@@ -219,6 +221,7 @@ const expectedForm: OtherFormState = {
         distroMaxHostsFactor: 2,
         targetTimeSecondsOverride: 300,
         idleTimeSecondsOverride: 600,
+        mergeQueueTargetTimeSecondsOverride: 120,
       },
       cost: {
         ebsDiscount: 0.1,
@@ -248,6 +251,7 @@ const expectedForm: OtherFormState = {
       projectTasksPairs: [
         {
           projectId: "test-project",
+          isRegex: true,
           allowedTasks: ["compile", "test"],
           allowedBVs: ["ubuntu", "windows"],
         },
@@ -384,11 +388,13 @@ const expectedGql: AdminSettingsInput = {
     distroMaxHostsFactor: 2,
     targetTimeSecondsOverride: 300,
     idleTimeSecondsOverride: 600,
+    mergeQueueTargetTimeSecondsOverride: 120,
   },
   singleTaskDistro: {
     projectTasksPairs: [
       {
         projectID: "test-project",
+        isRegex: true,
         allowedTasks: ["compile", "test"],
         allowedBVs: ["ubuntu", "windows"],
       },

@@ -1,4 +1,5 @@
 import { Global, css } from "@emotion/react";
+import "@via-ds/tokens/tokens.css";
 import {
   bodyStyles,
   fontStyles,
@@ -24,6 +25,10 @@ export const globalStyles = css`
     ::-webkit-scrollbar {
       display: none;
     }
+  }
+
+  [data-via-provider] {
+    display: contents;
   }
 
   /* Ensure toasts appear above the side panel (z-index: 2) */

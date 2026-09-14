@@ -306,6 +306,7 @@ export const ADMIN_SETTINGS = gql`
       releaseMode {
         distroMaxHostsFactor
         idleTimeSecondsOverride
+        mergeQueueTargetTimeSecondsOverride
         targetTimeSecondsOverride
       }
 
@@ -334,6 +335,7 @@ export const ADMIN_SETTINGS = gql`
         hostAllocatorRoundingRule
         hostsOverallocatedRule
         mainlineTimeInQueueFactor
+        mergeQueueTargetTimeSeconds
         numDependentsFactor
         patchFactor
         patchTimeInQueueFactor
@@ -350,6 +352,7 @@ export const ADMIN_SETTINGS = gql`
         projectTasksPairs {
           allowedBVs
           allowedTasks
+          isRegex
           projectId
         }
       }
@@ -394,6 +397,10 @@ export const ADMIN_SETTINGS = gql`
         }
       }
       taskLimits {
+        hourlyPatchTaskOverrides {
+          maxHourlyPatchTasks
+          projectOrRepoId
+        }
         maxConcurrentLargeParserProjectTasks
         maxDailyAutomaticRestarts
         maxDegradedModeConcurrentLargeParserProjectTasks
@@ -407,6 +414,7 @@ export const ADMIN_SETTINGS = gql`
         maxScheduledTasksPerDistro
         maxTaskExecution
         maxTasksPerVersion
+        taskQueueAutoUnscheduleThreshold
       }
       testSelection {
         url

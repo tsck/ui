@@ -1,18 +1,15 @@
 import { useState } from "react";
-import styled from "@emotion/styled";
-import { Icon } from "@leafygreen-ui/icon";
 import { Menu, MenuItem } from "@leafygreen-ui/menu";
-import { palette } from "@leafygreen-ui/palette";
 import { Link, To } from "react-router-dom";
-
-const { white } = palette;
+import { Icon } from "@evg-ui/lib/components/Icon";
+import styles from "./index.module.css";
 
 const NavDropdownMenuIcon: React.FC<{ open: boolean }> = ({ open }) => (
   <Icon glyph={open ? "CaretUp" : "CaretDown"} role="presentation" />
 );
 
 export interface MenuItemType {
-  "data-cy"?: string;
+  "data-testid"?: string;
   text: string | React.ReactNode;
   href?: string;
   to?: To;
@@ -25,7 +22,7 @@ interface NavDropdownItemType extends MenuItemType {
 
 const NavDropdownItem: React.FC<NavDropdownItemType> = ({
   closeMenu,
-  "data-cy": itemDataCy,
+  "data-testid": itemDataTestId,
   href,
   text,
   to,
@@ -33,25 +30,35 @@ const NavDropdownItem: React.FC<NavDropdownItemType> = ({
   const isInternalLink = to !== undefined;
 
   return isInternalLink ? (
-    <MenuItem as={Link} data-cy={itemDataCy} onClick={closeMenu} to={to}>
+    <MenuItem
+      as={Link}
+      data-testid={itemDataTestId}
+      onClick={closeMenu}
+      to={to}
+    >
       {text}
     </MenuItem>
   ) : (
-    // @ts-expect-error: FIXME. This comment was added by an automated script.
-    <MenuItem as="a" data-cy={itemDataCy} href={href} onClick={closeMenu}>
+    <MenuItem
+      as="a"
+      data-testid={itemDataTestId}
+      // @ts-expect-error: FIXME. This comment was added by an automated script.
+      href={href}
+      onClick={closeMenu}
+    >
       {text}
     </MenuItem>
   );
 };
 
 interface NavDropdownProps {
-  dataCy?: string;
+  dataTestId?: string;
   menuItems: MenuItemType[];
   title: string;
 }
 
 export const NavDropdown: React.FC<NavDropdownProps> = ({
-  dataCy,
+  dataTestId,
   menuItems,
   title,
 }) => {
@@ -63,10 +70,10 @@ export const NavDropdown: React.FC<NavDropdownProps> = ({
       open={openMenu}
       setOpen={setOpenMenu}
       trigger={
-        <NavDropdownTitle data-cy={dataCy}>
+        <span className={styles.navDropdownTitle} data-testid={dataTestId}>
           {title}
           <NavDropdownMenuIcon open={openMenu} />
-        </NavDropdownTitle>
+        </span>
       }
     >
       {menuItems.map((menuItem) => (
@@ -82,12 +89,3 @@ export const NavDropdown: React.FC<NavDropdownProps> = ({
     </Menu>
   );
 };
-
-const NavDropdownTitle = styled.span`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: ${white};
-  cursor: pointer;
-`;

@@ -1,8 +1,7 @@
-import styled from "@emotion/styled";
 import { ALL_VALUE, TreeSelect } from "@evg-ui/lib/components/TreeSelect";
-import { size } from "@evg-ui/lib/constants/tokens";
 import Dropdown from "components/Dropdown";
 import ElementWrapper from "../ElementWrapper";
+import styles from "./MultiSelect.module.css";
 import { EnumSpruceWidgetProps } from "./types";
 
 export const MultiSelect: React.FC<EnumSpruceWidgetProps> = ({
@@ -13,7 +12,11 @@ export const MultiSelect: React.FC<EnumSpruceWidgetProps> = ({
   rawErrors,
   value,
 }) => {
-  const { "data-cy": dataCy, elementWrapperCSS, enumOptions = [] } = options;
+  const {
+    "data-testid": dataTestId,
+    elementWrapperCSS,
+    enumOptions = [],
+  } = options;
 
   const dropdownOptions = [
     {
@@ -38,13 +41,13 @@ export const MultiSelect: React.FC<EnumSpruceWidgetProps> = ({
 
   return (
     <ElementWrapper css={elementWrapperCSS} limitMaxWidth>
-      <Container>
+      <div className={styles.container}>
         <label htmlFor={`${label}-multiselect`}>{label}</label>
         <Dropdown
           buttonText={`${label}: ${
             value.length ? value.join(", ") : "No options selected."
           }`}
-          data-cy={dataCy}
+          data-testid={dataTestId}
           disabled={disabled}
           id={`${label}-multiselect`}
         >
@@ -57,15 +60,9 @@ export const MultiSelect: React.FC<EnumSpruceWidgetProps> = ({
         {rawErrors?.length > 0 && (
           <span className="error">{rawErrors?.join(", ")}</span>
         )}
-      </Container>
+      </div>
     </ElementWrapper>
   );
 };
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${size.xxs};
-`;
 
 export default MultiSelect;

@@ -1,17 +1,6 @@
-import styled from "@emotion/styled";
 import { Card } from "@leafygreen-ui/card";
-import { size } from "@evg-ui/lib/constants/tokens";
 import { MyHost, TableVolume } from "types/spawn";
-
-const FieldContainer = styled.div`
-  display: flex;
-  width: 100%;
-  margin: ${size.xs};
-`;
-
-const FieldName = styled.div`
-  min-width: 150px;
-`;
+import styles from "./DetailsCard.module.css";
 
 interface CardItem {
   label: string;
@@ -20,10 +9,10 @@ interface CardItem {
 
 const CardField: React.FC<CardItem> = ({ label, value }) =>
   value !== undefined ? (
-    <FieldContainer>
-      <FieldName>{label}</FieldName>
+    <div className={styles.fieldContainer}>
+      <div className={styles.fieldName}>{label}</div>
       <div>{value}</div>
-    </FieldContainer>
+    </div>
   ) : null;
 
 type FieldMap<T> = {
@@ -32,16 +21,16 @@ type FieldMap<T> = {
 
 interface DetailsCardProps {
   type: MyHost | TableVolume;
-  ["data-cy"]?: string;
+  ["data-testid"]?: string;
   fieldMaps: FieldMap<MyHost | TableVolume>;
 }
 
 export const DetailsCard: React.FC<DetailsCardProps> = ({
-  "data-cy": dataCy,
+  "data-testid": dataTestId,
   fieldMaps,
   type,
 }) => (
-  <CardContainer data-cy={dataCy}>
+  <Card className={styles.cardContainer} data-testid={dataTestId}>
     {Object.keys(fieldMaps).map((key) => (
       <CardField
         key={`${key}_${type.id}`}
@@ -49,11 +38,5 @@ export const DetailsCard: React.FC<DetailsCardProps> = ({
         value={fieldMaps[key](type)}
       />
     ))}
-  </CardContainer>
+  </Card>
 );
-
-const CardContainer = styled(Card)`
-  width: 80%;
-  padding: ${size.s} ${size.l};
-  margin: 0 ${size.m};
-`;

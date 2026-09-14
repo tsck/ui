@@ -129,8 +129,8 @@ const VersionTiming: React.FC<Props> = ({ taskCount, versionId }) => {
       <TableControl
         disabled={!isVariantTimingView}
         filteredCount={isVariantTimingView ? count : chartData.length - 1}
-        label={isVariantTimingView ? "tasks" : "variants"}
         limit={isVariantTimingView ? limit || 0 : chartData.length - 1}
+        loading={loading}
         onClear={clearQueryParams}
         onPageSizeChange={(l: number) => {
           versionAnalytics.sendEvent({

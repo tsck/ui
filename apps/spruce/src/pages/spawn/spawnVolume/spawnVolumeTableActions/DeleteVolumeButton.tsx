@@ -35,13 +35,13 @@ export const DeleteVolumeButton: React.FC<Props> = ({ volume }) => {
   const spawnAnalytics = useSpawnAnalytics();
 
   const [checkboxAcknowledged, setCheckboxAcknowledged] = useState(
-    !volume.hostID,
+    !volume.host,
   );
 
   return (
     <Popconfirm
       confirmDisabled={!checkboxAcknowledged}
-      data-cy="delete-volume-popconfirm"
+      data-testid="delete-volume-popconfirm"
       onConfirm={() => {
         spawnAnalytics.sendEvent({
           name: "Deleted a volume",
@@ -52,7 +52,7 @@ export const DeleteVolumeButton: React.FC<Props> = ({ volume }) => {
       trigger={
         <Button
           as="button"
-          data-cy={`trash-${volume.displayName || volume.id}`}
+          data-testid={`trash-${volume.displayName || volume.id}`}
           disabled={loadingRemoveVolume || volume.migrating}
           onClick={(e) => {
             e.stopPropagation();
@@ -64,10 +64,10 @@ export const DeleteVolumeButton: React.FC<Props> = ({ volume }) => {
       }
     >
       Delete volume “{volumeName}”?
-      {volume.hostID && (
+      {volume.host && (
         <Checkbox
           checked={checkboxAcknowledged}
-          data-cy="abort-checkbox"
+          data-testid="abort-checkbox"
           label="I understand this volume is currently mounted to a host."
           onChange={(e) => {
             e.nativeEvent.stopPropagation();
